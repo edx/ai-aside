@@ -16,10 +16,10 @@ Unreleased
 
 *
 
-0.1.0 – 2023-05-10
+1.2.0 – 2023-05-11
 **********************************************
 
 Added
 =====
 
-* First release on PyPI.
+* Porting over summary-aside from edx-arch-experiments version 1.2.0

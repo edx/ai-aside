@@ -103,10 +103,10 @@ CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encod
 setup(
     name='ai-aside',
     version=VERSION,
-    description="""temporary readme filler""",
+    description="""A plugin containing xblocks and apps supporting GPT and other LLM use on edX.""",
     long_description=README + '\n\n' + CHANGELOG,
     author='edX',
-    author_email='oscm@edx.org',
+    author_email='ashultz@edx.org',
     url='https://github.com/openedx/ai-aside',
     packages=find_packages(
         include=['ai_aside', 'ai_aside.*'],
@@ -129,4 +129,14 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
     ],
+    entry_points={
+        "lms.djangoapp": [
+            "ai_aside = ai_aside.apps:AiAsideConfig",
+            "summaryhook = ai_aside.summaryhook_aside.apps:SummaryHookConfig",
+        ],
+        "xblock_asides.v1": [
+            "summaryhook_aside = ai_aside.summaryhook_aside.block:SummaryHookAside",
+        ],
+    },
+
 )

@@ -1,17 +1,15 @@
-"""
-ai_aside Django application initialization.
-"""
-
+"""Config for summary hook xblock aside"""
 from django.apps import AppConfig
 from edx_django_utils.plugins.constants import PluginSettings
 
 
-class AiAsideConfig(AppConfig):
+class SummaryHookConfig(AppConfig):
     """
-    Configuration for the ai_aside Django application.
+    Configuration for the Summary Hook xblock aside.
     """
 
-    name = 'ai_aside'
+    name = 'ai_aside.summaryhook_aside'
+
     plugin_app = {
         PluginSettings.CONFIG: {
             'lms.djangoapp': {
