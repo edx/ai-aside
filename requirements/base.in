@@ -1,0 +1,6 @@
+# Core requirements for using this application
+-c constraints.txt
+
+Django             # Web application framework
+edx_django_utils
+xblock

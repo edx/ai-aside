@@ -1,0 +1,9 @@
+.idea
+edx_arch_experiments.egg-info
+__pycache__/
+coverage.xml
+build/
+.tox/
+**/private.py
+.coverage
+dist/

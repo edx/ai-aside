@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tox-env: [django32, quality]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
+      - name: Install requirements
+        run: pip install -r requirements/ci.txt
+      - name: Run tox
+        env:
+          TOXENV: ${{ matrix.tox-env }}
+        run: tox
