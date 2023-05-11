@@ -5,7 +5,7 @@ apiVersion: backstage.io/v1alpha1
 kind: ""
 metadata:
   name: 'ai-aside'
-  description: "temporary readme filler"
+  description: "A plugin containing xblocks and apps supporting GPT and other LLM use on edX."
   annotations:
     # (Optional) Annotation keys and values can be whatever you want.
     # We use it in Open edX repos to have a comma-separated list of GitHub user
@@ -15,18 +15,18 @@ metadata:
 spec:
 
   # (Required) This can be a group(`group:<group_name>` or a user(`user:<github_username>`)
-  owner: ""
+  owner: "user:ashultz0"
 
   # (Required) Acceptable Type Values: service, website, library
-  type: ''
+  # type: ''
 
   # (Required) Acceptable Lifecycle Values: experimental, production, deprecated
   lifecycle: 'experimental'
 
   # (Optional) The value can be the name of any known component.
-  subcomponentOf: '<name_of_a_component>'
+  # subcomponentOf: '<name_of_a_component>'
 
   # (Optional) An array of different components or resources.
-  dependsOn:
-  - '<component_or_resource>'
-  - '<another_component_or_resource>'
+  # dependsOn:
+  # - '<component_or_resource>'
+  # - '<another_component_or_resource>'
