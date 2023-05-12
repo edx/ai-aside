@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Tests for the `ai-aside` models module.
+Placeholder for tests for the `ai-aside` module.
 """
 
 
