@@ -30,6 +30,14 @@ Local testing
 ~~~~~~~~~~~~~
 To test your changes locally, you will need to install the package from your local branch into edx-platform. For example, if using devstack, copy or clone your branch into <devstack-parent>/src/ai-aside. Then, in an lms or cms shell, run ``pip install -e /edx/src/ai-aside``.  The plug-in configuration will automatically be picked up once installed, and changes will be hot reloaded.
 
+Enabling the Aside
+~~~~~~~~~~~~~~~~~~
+
+For the summary aside to work, you will have to make two changes in the LMS admin:
+
+1. You must create an ``XBlockAsidesConfig`` (admin URL: `/admin/lms_xblock/xblockasidesconfig/`). This model has a list of blocks you do not want asides to apply to that can be left alone, and an enabled setting that unsurprisingly should be True.
+
+2. You must enable a course waffle flag for each course you want to summarize. ``summaryhook.summaryhook_enabled`` is the main one, ``summaryhook_enabled.summaryhook_staff_only`` can be used if you only want staff to see it.
 
 Every time you develop something in this repo
 ---------------------------------------------
