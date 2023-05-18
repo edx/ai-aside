@@ -1,9 +1,12 @@
 """Xblock aside enabling OpenAI driven summaries"""
 
+import time
+
 from django.conf import settings
 from django.template import Context, Template
 from web_fragments.fragment import Fragment
-from xblock.core import XBlockAside
+from webob import Response
+from xblock.core import XBlock, XBlockAside
 
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
@@ -15,6 +18,7 @@ summary_fragment = """
       data-url-api="{{data_url_api}}"
       data-course-id="{{data_course_id}}"
       data-content-id="{{data_content_id}}"
+      data-handler-url="{{data_handler_url}}"
     >
     </div>
   </div>
@@ -54,6 +58,39 @@ class SummaryHookAside(XBlockAside):
     XBlock aside that injects AI summary javascript
     """
 
+    @XBlock.handler
+    def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
+        """
+        Shell handler to the summary xblock aside.
+        """
+        timestr = time.strftime('%Y-%m-%d %H:%M:%S')
+        json = {
+            "contentId": "some-content-uuid",
+            "courseId": "some-course-uuid",
+            "data": [{
+                "id": "this-flashy-uuid",
+                "type": "VIDEO",
+                "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec arcu nulla, porttitor sed "
+                "volutpat nec, eleifend venenatis leo. Ut luctus libero nisi. Nam elementum scelerisque purus in "
+                "pretium. Etiam in interdum nibh, vel dictum ligula. Nunc orci nunc, consequat ut efficitur vitae, "
+                "tincidunt non sapien. Integer id sollicitudin erat. Praesent egestas odio quis vulputate ornare. ",
+                "created_at": timestr,
+                "updated_at": timestr,
+            }, {
+                "id": "this-stunning-uuid",
+                "type": "CONTENT",
+                "text": "Nunc dignissim dapibus lectus, a ultrices est tempus quis. Fusce congue lorem et urna tempor "
+                "luctus. Phasellus tincidunt mauris at sodales facilisis. Nam tortor erat, porttitor ac laoreet "
+                "vitae, molestie non lacus. Praesent eu fermentum lacus. Fusce lectus risus, sagittis ut justo in, "
+                "vulputate sodales elit. In vitae tempor nulla. Phasellus tincidunt ante nec enim pharetra.",
+                "created_at": timestr,
+                "updated_at": timestr,
+            }],
+            "created_at": timestr,
+            "updated_at": timestr,
+        }
+        return Response(json_body=json)
+
     @XBlockAside.aside_for('student_view')
     def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
         """
@@ -70,6 +107,7 @@ class SummaryHookAside(XBlockAside):
                     'data_url_api': settings.SUMMARY_HOOK_HOST,
                     'data_course_id': block.scope_ids.usage_id.course_key,
                     'data_content_id': block.scope_ids.usage_id,
+                    'data_handler_url': self.runtime.handler_url(self, 'summary_handler'),
                     'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
                 }
             )
