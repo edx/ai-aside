@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+
 """Xblock aside enabling OpenAI driven summaries"""
 
 import time
@@ -58,11 +60,26 @@ class SummaryHookAside(XBlockAside):
     XBlock aside that injects AI summary javascript
     """
 
+    def _get_block(self):
+        """
+        Gets the current aside block.
+        """
+
+        from xmodule.modulestore.django import modulestore  # pylint: disable=import-error, import-outside-toplevel
+        return modulestore().get_item(self.scope_ids.usage_id.usage_key)
+
     @XBlock.handler
     def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
         Shell handler to the summary xblock aside.
         """
+
+        block = self._get_block()
+        valid = self.should_apply_to_block(block)
+
+        if not valid:
+            return Response(status=404)
+
         timestr = time.strftime('%Y-%m-%d %H:%M:%S')
         json = {
             "contentId": "some-content-uuid",
