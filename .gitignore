@@ -7,3 +7,5 @@ build/
 **/private.py
 .coverage
 dist/
+.vscode/
+ai_aside.egg-info/
