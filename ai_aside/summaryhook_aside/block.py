@@ -62,7 +62,7 @@ class SummaryHookAside(XBlockAside):
 
     def _get_block(self):
         """
-        Gets the current aside block.
+        Gets the block wrapped by this aside.
         """
 
         from xmodule.modulestore.django import modulestore  # pylint: disable=import-error, import-outside-toplevel
@@ -82,29 +82,29 @@ class SummaryHookAside(XBlockAside):
 
         timestr = time.strftime('%Y-%m-%d %H:%M:%S')
         json = {
-            "contentId": "some-content-uuid",
-            "courseId": "some-course-uuid",
-            "data": [{
-                "id": "this-flashy-uuid",
-                "type": "VIDEO",
-                "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec arcu nulla, porttitor sed "
-                "volutpat nec, eleifend venenatis leo. Ut luctus libero nisi. Nam elementum scelerisque purus in "
-                "pretium. Etiam in interdum nibh, vel dictum ligula. Nunc orci nunc, consequat ut efficitur vitae, "
-                "tincidunt non sapien. Integer id sollicitudin erat. Praesent egestas odio quis vulputate ornare. ",
-                "created_at": timestr,
-                "updated_at": timestr,
+            'content_id': str(block.scope_ids.usage_id),
+            'course_id': str(block.scope_ids.usage_id.course_key),
+            'data': [{
+                'id': 'this-flashy-uuid',
+                'type': 'VIDEO',
+                'text': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec arcu nulla, porttitor sed '
+                'volutpat nec, eleifend venenatis leo. Ut luctus libero nisi. Nam elementum scelerisque purus in '
+                'pretium. Etiam in interdum nibh, vel dictum ligula. Nunc orci nunc, consequat ut efficitur vitae, '
+                'tincidunt non sapien. Integer id sollicitudin erat. Praesent egestas odio quis vulputate ornare. ',
+                'created_at': timestr,
+                'updated_at': timestr,
             }, {
-                "id": "this-stunning-uuid",
-                "type": "CONTENT",
-                "text": "Nunc dignissim dapibus lectus, a ultrices est tempus quis. Fusce congue lorem et urna tempor "
-                "luctus. Phasellus tincidunt mauris at sodales facilisis. Nam tortor erat, porttitor ac laoreet "
-                "vitae, molestie non lacus. Praesent eu fermentum lacus. Fusce lectus risus, sagittis ut justo in, "
-                "vulputate sodales elit. In vitae tempor nulla. Phasellus tincidunt ante nec enim pharetra.",
-                "created_at": timestr,
-                "updated_at": timestr,
+                'id': 'this-stunning-uuid',
+                'type': 'CONTENT',
+                'text': 'Nunc dignissim dapibus lectus, a ultrices est tempus quis. Fusce congue lorem et urna tempor '
+                'luctus. Phasellus tincidunt mauris at sodales facilisis. Nam tortor erat, porttitor ac laoreet '
+                'vitae, molestie non lacus. Praesent eu fermentum lacus. Fusce lectus risus, sagittis ut justo in, '
+                'vulputate sodales elit. In vitae tempor nulla. Phasellus tincidunt ante nec enim pharetra.',
+                'created_at': timestr,
+                'updated_at': timestr,
             }],
-            "created_at": timestr,
-            "updated_at": timestr,
+            'created_at': timestr,
+            'updated_at': timestr,
         }
         return Response(json_body=json)
 
