@@ -12,6 +12,7 @@ from django.template import Context, Template
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
+from xmodule.video_block.transcripts_utils import Transcript, get_transcript  # pylint: disable=import-error
 
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
@@ -59,16 +60,26 @@ def _extract_child_contents(child, category):
     """
     Process the child contents based on its category.
     """
-    content = None
+    if category == 'html':
+        try:
+            content_html = child.get_html()
+            text = _html_to_text(content_html)
 
-    if (
-        category == 'html'
-        and getattr(child, 'get_html', False)
-    ):
-        content_html = child.get_html()
-        content = _html_to_text(content_html)
+            return text
+        except AttributeError:
+            return None
 
-    return content
+    if category == 'video':
+        try:
+            transcript = get_transcript(child)[0]
+            transcript_format = child.transcript_download_format
+            text = Transcript.convert(transcript, transcript_format, 'txt')
+
+            return text
+        except AttributeError:
+            return None
+
+    return None
 
 
 def _get_children_contents(block):
