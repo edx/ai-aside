@@ -2,13 +2,17 @@
 
 """Xblock aside enabling OpenAI driven summaries"""
 
-import time
+from datetime import datetime
+from html import unescape
+from re import sub
+from unicodedata import normalize
 
 from django.conf import settings
 from django.template import Context, Template
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
+from xmodule.video_block.transcripts_utils import Transcript, get_transcript  # pylint: disable=import-error
 
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
@@ -30,28 +34,89 @@ summary_fragment = """
 """
 
 
+def _format_date(date):
+    return date.strftime('%Y-%m-%d %H:%M:%S') if isinstance(date, datetime) else None
+
+
 def _render_summary(context):
     template = Template(summary_fragment)
     return template.render(Context(context))
 
 
-def _children_have_summarizable_content(block):
+def _html_to_text(html_content):
     """
-    Only if a unit contains HTML blocks with sufficient text in them
-    is it worth injecting the summarizer.
+    Extracts the contents from an HTML string into simple text.
     """
+    text = sub('<[^<]+?>', '', html_content)  # Removing HTML tags
+    text = unescape(text)  # Unescaping html entities
+    text = normalize("NFKD", text)  # Normalizing text
+    text = sub(r'\s+', ' ', text)  # Removing extra spaces
+    text = text.strip()  # Trim
+
+    return text
+
+
+def _extract_child_contents(child, category):
+    """
+    Process the child contents based on its category.
+    """
+    if category == 'html':
+        try:
+            content_html = child.get_html()
+            text = _html_to_text(content_html)
+
+            return text
+        except AttributeError:
+            return None
+
+    if category == 'video':
+        try:
+            transcript = get_transcript(child)[0]
+            transcript_format = child.transcript_download_format
+            text = Transcript.convert(transcript, transcript_format, 'txt')
+
+            return text
+        except AttributeError:
+            return None
+
+    return None
+
+
+def _get_children_contents(block):
+    """
+    Extracts the analyzable contents from its children.
+    """
+    content_fragments = []
+
     children = block.get_children()
     for child in children:
         category = getattr(child, 'category', None)
-        if (
-                category == 'html'
-                and hasattr(child, 'get_html')
-                and len(child.get_html()) > settings.SUMMARY_HOOK_MIN_SIZE
-        ):
+        published_on = getattr(child, 'published_on', None)
+        edited_on = getattr(child, 'published_on', None)
+        definition_id = str(getattr(getattr(child, 'scope_ids', None), 'def_id', None))
+        text = _extract_child_contents(child, category)
+        content_fragments.append({
+            'definition_id': definition_id,
+            'type': category,
+            'text': text,
+            'published_on': published_on,
+            'edited_on': edited_on,
+        })
+
+    return content_fragments
+
+
+def _children_have_summarizable_content(block):
+    """
+    Only if a unit contains HTML blocks with at least a child
+    with sufficient text in them is it worth injecting the summarizer.
+    """
+    children = _get_children_contents(block)
+
+    for child in children:
+        if child['text'] and len(child['text']) > settings.SUMMARY_HOOK_MIN_SIZE:
             return True
-        # we will eventually require there to be transcripts available to trigger but not yet
-        if category == 'video':
-            return True
+
     return False
 
 
@@ -73,38 +138,30 @@ class SummaryHookAside(XBlockAside):
         """
         Shell handler to the summary xblock aside.
         """
-
         block = self._get_block()
         valid = self.should_apply_to_block(block)
 
         if not valid:
             return Response(status=404)
 
-        timestr = time.strftime('%Y-%m-%d %H:%M:%S')
+        published_on = getattr(block, 'published_on', None)
+        edited_on = getattr(block, 'published_on', None)
+        children_contents = _get_children_contents(block)
+
+        data = []
+        for child in children_contents:
+            data.append({
+                **child,
+                'published_on': _format_date(child['published_on']),
+                'edited_on': _format_date(child['edited_on']),
+            })
+
         json = {
             'content_id': str(block.scope_ids.usage_id),
             'course_id': str(block.scope_ids.usage_id.course_key),
-            'data': [{
-                'id': 'this-flashy-uuid',
-                'type': 'VIDEO',
-                'text': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec arcu nulla, porttitor sed '
-                'volutpat nec, eleifend venenatis leo. Ut luctus libero nisi. Nam elementum scelerisque purus in '
-                'pretium. Etiam in interdum nibh, vel dictum ligula. Nunc orci nunc, consequat ut efficitur vitae, '
-                'tincidunt non sapien. Integer id sollicitudin erat. Praesent egestas odio quis vulputate ornare. ',
-                'created_at': timestr,
-                'updated_at': timestr,
-            }, {
-                'id': 'this-stunning-uuid',
-                'type': 'CONTENT',
-                'text': 'Nunc dignissim dapibus lectus, a ultrices est tempus quis. Fusce congue lorem et urna tempor '
-                'luctus. Phasellus tincidunt mauris at sodales facilisis. Nam tortor erat, porttitor ac laoreet '
-                'vitae, molestie non lacus. Praesent eu fermentum lacus. Fusce lectus risus, sagittis ut justo in, '
-                'vulputate sodales elit. In vitae tempor nulla. Phasellus tincidunt ante nec enim pharetra.',
-                'created_at': timestr,
-                'updated_at': timestr,
-            }],
-            'created_at': timestr,
-            'updated_at': timestr,
+            'data': data,
+            'published_on': _format_date(published_on),
+            'edited_on': _format_date(edited_on),
         }
         return Response(json_body=json)
 
