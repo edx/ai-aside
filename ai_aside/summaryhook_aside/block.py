@@ -12,7 +12,6 @@ from django.template import Context, Template
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
-from xmodule.video_block.transcripts_utils import Transcript, get_transcript  # pylint: disable=import-error
 
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
@@ -43,7 +42,7 @@ def _render_summary(context):
     return template.render(Context(context))
 
 
-def _html_to_text(html_content):
+def _html_to_text_fallback(html_content):
     """
     Extracts the contents from an HTML string into simple text.
     """
@@ -56,10 +55,32 @@ def _html_to_text(html_content):
     return text
 
 
+def _html_to_text(html_content):
+    """
+    Extracts the contents from an HTML string into simple text.
+    """
+
+    try:
+        from xmodule.annotator_mixin import html_to_text  # pylint: disable=import-outside-toplevel
+    except ImportError:
+        return _html_to_text_fallback(html_content)
+
+    text = html_to_text(html_content)
+
+    return text
+
+
 def _extract_child_contents(child, category):
     """
     Process the child contents based on its category.
     """
+
+    try:
+        # pylint: disable=import-outside-toplevel
+        from xmodule.video_block.transcripts_utils import Transcript, get_transcript
+    except ImportError:
+        return None
+
     if category == 'html':
         try:
             content_html = child.get_html()
@@ -110,12 +131,20 @@ def _children_have_summarizable_content(block):
     """
     Only if a unit contains HTML blocks with at least a child
     with sufficient text in them is it worth injecting the summarizer.
+    We don't sanitize the content due to performance.
     """
-    children = _get_children_contents(block)
+
+    children = block.get_children()
 
     for child in children:
-        if child['text'] and len(child['text']) > settings.SUMMARY_HOOK_MIN_SIZE:
-            return True
+        try:
+            category = child.category
+            if category == 'html' and len(child.get_html()) > settings.SUMMARY_HOOK_MIN_SIZE:
+                return True
+            if category == 'video':
+                return True
+        except AttributeError:
+            pass
 
     return False
 
@@ -194,6 +223,7 @@ class SummaryHookAside(XBlockAside):
         Overrides base XBlockAside implementation. Indicates whether this aside should
         apply to a given block type, course, and user.
         """
+
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key
