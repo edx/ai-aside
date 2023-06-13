@@ -179,13 +179,17 @@ class SummaryHookAside(XBlockAside):
         if not _children_have_summarizable_content(block):
             return fragment
 
+        # thirdparty=true connects to the unauthenticated handler for now,
+        # we will secure it in ACADEMIC-16187
+        handler_url = self.runtime.handler_url(self, 'summary_handler', thirdparty=True)
+
         fragment.add_content(
             _render_summary(
                 {
                     'data_url_api': settings.SUMMARY_HOOK_HOST,
                     'data_course_id': block.scope_ids.usage_id.course_key,
                     'data_content_id': block.scope_ids.usage_id,
-                    'data_handler_url': self.runtime.handler_url(self, 'summary_handler'),
+                    'data_handler_url': handler_url,
                     'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
                 }
             )
