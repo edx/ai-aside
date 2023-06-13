@@ -183,6 +183,11 @@ class SummaryHookAside(XBlockAside):
         # we will secure it in ACADEMIC-16187
         handler_url = self.runtime.handler_url(self, 'summary_handler', thirdparty=True)
 
+        # enable ai-spot to see the LMS when they are installed together in devstack
+        aispot_lms_name = settings.AISPOT_LMS_NAME
+        if aispot_lms_name != '':
+            handler_url = handler_url.replace('localhost', aispot_lms_name)
+
         fragment.add_content(
             _render_summary(
                 {
