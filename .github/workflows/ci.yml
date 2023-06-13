@@ -16,7 +16,7 @@ jobs:
         tox-env: [django32, quality]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.8'
           architecture: x64
