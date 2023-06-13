@@ -3,17 +3,14 @@
 """Xblock aside enabling OpenAI driven summaries"""
 
 from datetime import datetime
-from html import unescape
-from re import sub
-from unicodedata import normalize
 
 from django.conf import settings
 from django.template import Context, Template
 from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
-from xmodule.video_block.transcripts_utils import Transcript, get_transcript  # pylint: disable=import-error
 
+from ai_aside.summaryhook_aside.text_utils import html_to_text
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
 summary_fragment = """
@@ -43,27 +40,21 @@ def _render_summary(context):
     return template.render(Context(context))
 
 
-def _html_to_text(html_content):
-    """
-    Extracts the contents from an HTML string into simple text.
-    """
-    text = sub('<[^<]+?>', '', html_content)  # Removing HTML tags
-    text = unescape(text)  # Unescaping html entities
-    text = normalize("NFKD", text)  # Normalizing text
-    text = sub(r'\s+', ' ', text)  # Removing extra spaces
-    text = text.strip()  # Trim
-
-    return text
-
-
 def _extract_child_contents(child, category):
     """
     Process the child contents based on its category.
     """
+
+    try:
+        # pylint: disable=import-outside-toplevel
+        from xmodule.video_block.transcripts_utils import Transcript, get_transcript
+    except ImportError:
+        return None
+
     if category == 'html':
         try:
             content_html = child.get_html()
-            text = _html_to_text(content_html)
+            text = html_to_text(content_html)
 
             return text
         except AttributeError:
@@ -92,9 +83,14 @@ def _get_children_contents(block):
     for child in children:
         category = getattr(child, 'category', None)
         published_on = getattr(child, 'published_on', None)
-        edited_on = getattr(child, 'published_on', None)
+        edited_on = getattr(child, 'edited_on', None)
         definition_id = str(getattr(getattr(child, 'scope_ids', None), 'def_id', None))
         text = _extract_child_contents(child, category)
+
+        # Skip child if nothing useful can be extracted from it.
+        if not text:
+            continue
+
         content_fragments.append({
             'definition_id': definition_id,
             'type': category,
@@ -110,12 +106,20 @@ def _children_have_summarizable_content(block):
     """
     Only if a unit contains HTML blocks with at least a child
     with sufficient text in them is it worth injecting the summarizer.
+    We don't sanitize the content due to performance.
     """
-    children = _get_children_contents(block)
+
+    children = block.get_children()
 
     for child in children:
-        if child['text'] and len(child['text']) > settings.SUMMARY_HOOK_MIN_SIZE:
-            return True
+        try:
+            category = child.category
+            if category == 'html' and len(child.get_html()) > settings.SUMMARY_HOOK_MIN_SIZE:
+                return True
+            if category == 'video':
+                return True
+        except AttributeError:
+            pass
 
     return False
 
@@ -194,6 +198,7 @@ class SummaryHookAside(XBlockAside):
         Overrides base XBlockAside implementation. Indicates whether this aside should
         apply to a given block type, course, and user.
         """
+
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key
