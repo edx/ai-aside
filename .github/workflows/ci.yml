@@ -8,6 +8,9 @@ on:
 jobs:
   testing:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read
     strategy:
       matrix:
         tox-env: [django32, quality]
