@@ -100,8 +100,8 @@ def _get_children_contents(block):
 
         content_fragments.append({
             'definition_id': definition_id,
-            'type': category_type,
-            'text': text,
+            'content_type': category_type,
+            'content_text': text,
             'published_on': published_on,
             'edited_on': edited_on,
         })
