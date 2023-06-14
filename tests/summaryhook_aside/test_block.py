@@ -89,14 +89,14 @@ class TestSummaryHookAside(unittest.TestCase):
 
         expected = [{
             'definition_id': 'def-id-01',
-            'type': 'html',
-            'text': 'This is a test',
+            'content_type': 'TEXT',
+            'content_text': 'This is a test',
             'published_on': 'published-on-01',
             'edited_on': 'edited-on-01',
         }, {
             'definition_id': 'def-id-02',
-            'type': 'video',
-            'text': 'This is the text version from the transcript',
+            'content_type': 'VIDEO',
+            'content_text': 'This is the text version from the transcript',
             'published_on': 'published-on-02',
             'edited_on': 'edited-on-02',
         }]
