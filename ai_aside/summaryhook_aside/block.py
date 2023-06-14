@@ -13,6 +13,12 @@ from xblock.core import XBlock, XBlockAside
 from ai_aside.summaryhook_aside.text_utils import html_to_text
 from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
 
+# map block types to what ai-spot expects for content types
+CATEGORY_TYPE_MAP = {
+    "html": "TEXT",
+    "video": "VIDEO",
+}
+
 summary_fragment = """
 <div>&nbsp;</div>
 <div class="summary-hook">
@@ -82,6 +88,7 @@ def _get_children_contents(block):
     children = block.get_children()
     for child in children:
         category = getattr(child, 'category', None)
+        category_type = CATEGORY_TYPE_MAP.get(category)
         published_on = getattr(child, 'published_on', None)
         edited_on = getattr(child, 'edited_on', None)
         definition_id = str(getattr(getattr(child, 'scope_ids', None), 'def_id', None))
@@ -93,7 +100,7 @@ def _get_children_contents(block):
 
         content_fragments.append({
             'definition_id': definition_id,
-            'type': category,
+            'type': category_type,
             'text': text,
             'published_on': published_on,
             'edited_on': edited_on,
