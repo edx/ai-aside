@@ -1,13 +1,23 @@
 import unittest
 from datetime import datetime
+from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
-from ai_aside.summaryhook_aside.block import _extract_child_contents, _format_date, _get_children_contents
+from django.test import TestCase, override_settings
+
+from ai_aside.summaryhook_aside.block import (
+    _check_summarizable,
+    _extract_child_contents,
+    _format_date,
+    _parse_children_contents,
+)
+
+fake_transcript = 'This is the text version from the transcript'
 
 
 class FakeTranscript():
     def convert(transcript, format, output):
-        return 'This is the text version from the transcript'
+        return fake_transcript
 
 
 def fake_get_transcript(child):
@@ -17,16 +27,18 @@ def fake_get_transcript(child):
 class FakeChild:
     transcript_download_format = 'txt'
 
-    def __init__(self, category, test_id='test-id'):
+    def __init__(self, category, test_id='test-id', test_html='<div>This is a test</div>'):
         self.category = category
         self.published_on = 'published-on-{}'.format(test_id)
         self.edited_on = 'edited-on-{}'.format(test_id)
         self.scope_ids = lambda: None
         self.scope_ids.def_id = 'def-id-{}'.format(test_id)
+        self.html = test_html
+        self.transcript = fake_transcript
 
     def get_html(self):
         if self.category == 'html':
-            return '<div>This is a test</div>'
+            return self.html
 
         return None
 
@@ -39,7 +51,8 @@ class FakeBlock:
         return self.children
 
 
-class TestSummaryHookAside(unittest.TestCase):
+@override_settings(SUMMARY_HOOK_MIN_SIZE=40)
+class TestSummaryHookAside(TestCase):
     def setUp(self):
         module_mock = MagicMock()
         module_mock.Transcript = FakeTranscript
@@ -79,29 +92,136 @@ class TestSummaryHookAside(unittest.TestCase):
         content = _extract_child_contents(child, category)
         self.assertIsNone(content)
 
-    def test_get_children_contents_with_valid_children(self):
+    def test_check_summarizable_with_valid_children(self):
         children = [
-            FakeChild('html', '01'),
-            FakeChild('video', '02'),
+            FakeChild('html', '01', '''
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Vivamus dapibus elit lacus, at vehicula arcu vehicula in.
+                    In id felis arcu. Maecenas elit quam, volutpat cursus pharetra vel, tempor at lorem.
+                    Fusce luctus orci quis tempor aliquet.
+                </p>'''),
+            FakeChild('html', '02', '''
+                <Everything on the content on this child is inside a tag, so parsing it would return almost>
+                    Nothing
+                </The quick brown fox jumps over the lazy dog>'''),
+            FakeChild('video', '03'),
+            FakeChild('unknown', '04'),
+        ]
+        block = FakeBlock(children)
+
+        content = _check_summarizable(block)
+
+        self.assertTrue(content)
+
+    def test_check_summarizable_with_invalid_children(self):
+        children = [
+            FakeChild('html', '01', '<p>Test</p>'),
+            FakeChild('unknown', '04'),
+        ]
+        block = FakeBlock(children)
+
+        content = _check_summarizable(block)
+
+        self.assertFalse(content)
+
+    def test_parse_children_contents_with_valid_children(self):
+        children = [
+            FakeChild('html', '01', '''
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Vivamus dapibus elit lacus, at vehicula arcu vehicula in.
+                    In id felis arcu. Maecenas elit quam, volutpat cursus pharetra vel, tempor at lorem.
+                    Fusce luctus orci quis tempor aliquet.
+                </p>'''),
+            FakeChild('html', '02', '''
+                <Everything on the content on this child is inside a tag, so parsing it would return almost>
+                    Nothing
+                </The quick brown fox jumps over the lazy dog>'''),
+            FakeChild('video', '03'),
+            FakeChild('unknown', '04'),
+        ]
+        block = FakeBlock(children)
+
+        expected = {
+            'length': 289,
+            'items': [{
+                'definition_id': 'def-id-01',
+                'content_type': 'TEXT',
+                'content_text': dedent('''\
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Vivamus dapibus elit lacus, at vehicula arcu vehicula in.
+                    In id felis arcu. Maecenas elit quam, volutpat cursus pharetra vel, tempor at lorem.
+                    Fusce luctus orci quis tempor aliquet.'''),
+                'published_on': 'published-on-01',
+                'edited_on': 'edited-on-01',
+            }, {
+                'definition_id': 'def-id-02',
+                'content_type': 'TEXT',
+                'content_text': 'Nothing',
+                'published_on': 'published-on-02',
+                'edited_on': 'edited-on-02',
+            }, {
+                'definition_id': 'def-id-03',
+                'content_type': 'VIDEO',
+                'content_text': fake_transcript,
+                'published_on': 'published-on-03',
+                'edited_on': 'edited-on-03',
+            }]
+        }
+
+        content = _parse_children_contents(block)
+
+        self.assertEqual(content, expected)
+
+    def test_parse_children_contents_with_valid_children_2(self):
+        children = [
+            FakeChild('html', '01', '''
+                <p>
+                    Lorem ipsum.
+                </p>'''),
+            FakeChild('html', '02', '''
+                <Everything on the content on this child is inside a tag, so parsing it would return almost>
+                    Nothing
+                </The quick brown fox jumps over the lazy dog>'''),
             FakeChild('unknown', '03'),
         ]
         block = FakeBlock(children)
 
-        expected = [{
-            'definition_id': 'def-id-01',
-            'content_type': 'TEXT',
-            'content_text': 'This is a test',
-            'published_on': 'published-on-01',
-            'edited_on': 'edited-on-01',
-        }, {
-            'definition_id': 'def-id-02',
-            'content_type': 'VIDEO',
-            'content_text': 'This is the text version from the transcript',
-            'published_on': 'published-on-02',
-            'edited_on': 'edited-on-02',
-        }]
+        expected = {
+            'length': 19,
+            'items': [{
+                'definition_id': 'def-id-01',
+                'content_type': 'TEXT',
+                'content_text': 'Lorem ipsum.',
+                'published_on': 'published-on-01',
+                'edited_on': 'edited-on-01',
+            }, {
+                'definition_id': 'def-id-02',
+                'content_type': 'TEXT',
+                'content_text': 'Nothing',
+                'published_on': 'published-on-02',
+                'edited_on': 'edited-on-02',
+            }]
+        }
 
-        content = _get_children_contents(block)
+        content = _parse_children_contents(block)
+
+        self.assertEqual(content, expected)
+
+    def test_parse_children_contents_with_invalid_children(self):
+        children = [
+            FakeChild('html', '01', '<div>This</div>'),
+            FakeChild('unknown', '03', '<div>This will not be parsed, category: <em>unknown</em>.<p>'),
+        ]
+        block = FakeBlock(children)
+
+        expected = {
+            'length': 0,
+            'items': []
+        }
+
+        content = _parse_children_contents(block)
 
         self.assertEqual(content, expected)
 
