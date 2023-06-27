@@ -82,13 +82,11 @@ def _extract_child_contents(child, category):
 def _parse_children_contents(block):
     """
     Extracts the analyzable contents from its children.
+    Returns length and an item list
     """
 
     if not _check_summarizable(block):
-        return {
-            'length': 0,
-            'items': []
-        }
+        return 0, []
 
     content_items = []
 
@@ -114,10 +112,7 @@ def _parse_children_contents(block):
             'edited_on': edited_on,
         })
 
-    return {
-        'length': content_length,
-        'items': content_items
-    }
+    return content_length, content_items
 
 
 def _check_summarizable(block):
@@ -177,12 +172,12 @@ class SummaryHookAside(XBlockAside):
 
         data = []
 
-        content = _parse_children_contents(block)
+        length, items = _parse_children_contents(block)
 
-        if content.length < settings.SUMMARY_HOOK_MIN_SIZE or len(content.items) < 1:
+        if length < settings.SUMMARY_HOOK_MIN_SIZE or len(items) < 1:
             return Response(json_body={'data': []})
 
-        for item in content.items:  # pylint: disable=not-an-iterable
+        for item in items:
             data.append({
                 **item,
                 'published_on': _format_date(item['published_on']),
@@ -206,8 +201,8 @@ class SummaryHookAside(XBlockAside):
         fragment = Fragment('')
 
         # Check if there is content that worths summarizing
-        content = _parse_children_contents(block)
-        if content.length < settings.SUMMARY_HOOK_MIN_SIZE:
+        length, _ = _parse_children_contents(block)
+        if length < settings.SUMMARY_HOOK_MIN_SIZE:
             return fragment
 
         # thirdparty=true connects to the unauthenticated handler for now,
