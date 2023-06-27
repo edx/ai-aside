@@ -143,9 +143,9 @@ class TestSummaryHookAside(TestCase):
         ]
         block = FakeBlock(children)
 
-        expected = {
-            'length': 289,
-            'items': [{
+        expected_length, expected_items = (
+            289,
+            [{
                 'definition_id': 'def-id-01',
                 'content_type': 'TEXT',
                 'content_text': dedent('''\
@@ -168,11 +168,12 @@ class TestSummaryHookAside(TestCase):
                 'published_on': 'published-on-03',
                 'edited_on': 'edited-on-03',
             }]
-        }
+        )
 
-        content = _parse_children_contents(block)
+        length, items = _parse_children_contents(block)
 
-        self.assertEqual(content, expected)
+        self.assertEqual(length, expected_length)
+        self.assertEqual(items, expected_items)
 
     def test_parse_children_contents_with_valid_children_2(self):
         children = [
@@ -188,9 +189,9 @@ class TestSummaryHookAside(TestCase):
         ]
         block = FakeBlock(children)
 
-        expected = {
-            'length': 19,
-            'items': [{
+        expected_length, expected_items = (
+            19,
+            [{
                 'definition_id': 'def-id-01',
                 'content_type': 'TEXT',
                 'content_text': 'Lorem ipsum.',
@@ -203,11 +204,12 @@ class TestSummaryHookAside(TestCase):
                 'published_on': 'published-on-02',
                 'edited_on': 'edited-on-02',
             }]
-        }
+        )
 
-        content = _parse_children_contents(block)
+        length, items = _parse_children_contents(block)
 
-        self.assertEqual(content, expected)
+        self.assertEqual(length, expected_length)
+        self.assertEqual(items, expected_items)
 
     def test_parse_children_contents_with_invalid_children(self):
         children = [
@@ -216,14 +218,10 @@ class TestSummaryHookAside(TestCase):
         ]
         block = FakeBlock(children)
 
-        expected = {
-            'length': 0,
-            'items': []
-        }
+        length, items = _parse_children_contents(block)
 
-        content = _parse_children_contents(block)
-
-        self.assertEqual(content, expected)
+        self.assertEqual(length, 0)
+        self.assertEqual(items, [])
 
 
 if __name__ == '__main__':
