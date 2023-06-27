@@ -14,7 +14,10 @@ Change Log
 Unreleased
 **********
 
-*
+* [ACADEMIC-16221] Improved content-length using parsed content .
+* [ACADEMIC-16218] Updated permissions so the CI can run properly.
+* [ACADEMIC-16169] [ACADEMIC-16182] Added Unit Tests to block.py.
+* [ACADEMIC-15950] Return proper content for the summary_handler endpoint.
 
 1.2.1 – 2023-05-19
 **********************************************

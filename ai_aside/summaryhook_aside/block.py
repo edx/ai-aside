@@ -79,13 +79,21 @@ def _extract_child_contents(child, category):
     return None
 
 
-def _get_children_contents(block):
+def _parse_children_contents(block):
     """
     Extracts the analyzable contents from its children.
     """
-    content_fragments = []
+
+    if not _check_summarizable(block):
+        return {
+            'length': 0,
+            'items': []
+        }
+
+    content_items = []
 
     children = block.get_children()
+    content_length = 0
     for child in children:
         category = getattr(child, 'category', None)
         category_type = CATEGORY_TYPE_MAP.get(category)
@@ -94,11 +102,11 @@ def _get_children_contents(block):
         definition_id = str(getattr(getattr(child, 'scope_ids', None), 'def_id', None))
         text = _extract_child_contents(child, category)
 
-        # Skip child if nothing useful can be extracted from it.
-        if not text:
+        if text is None:
             continue
 
-        content_fragments.append({
+        content_length += len(text)
+        content_items.append({
             'definition_id': definition_id,
             'content_type': category_type,
             'content_text': text,
@@ -106,25 +114,34 @@ def _get_children_contents(block):
             'edited_on': edited_on,
         })
 
-    return content_fragments
+    return {
+        'length': content_length,
+        'items': content_items
+    }
 
 
-def _children_have_summarizable_content(block):
+def _check_summarizable(block):
     """
     Only if a unit contains HTML blocks with at least a child
     with sufficient text in them is it worth injecting the summarizer.
-    We don't sanitize the content due to performance.
+    We don't sanitize the content due to performance in this first check.
     """
 
     children = block.get_children()
 
+    content_length = 0
+
     for child in children:
         try:
             category = child.category
-            if category == 'html' and len(child.get_html()) > settings.SUMMARY_HOOK_MIN_SIZE:
-                return True
+            if category == 'html':
+                content_length += len(child.get_html())
+                if content_length > settings.SUMMARY_HOOK_MIN_SIZE:
+                    return True
+
             if category == 'video':
                 return True
+
         except AttributeError:
             pass
 
@@ -157,14 +174,19 @@ class SummaryHookAside(XBlockAside):
 
         published_on = getattr(block, 'published_on', None)
         edited_on = getattr(block, 'published_on', None)
-        children_contents = _get_children_contents(block)
 
         data = []
-        for child in children_contents:
+
+        content = _parse_children_contents(block)
+
+        if content.length < settings.SUMMARY_HOOK_MIN_SIZE or len(content.items) < 1:
+            return Response(json_body={'data': []})
+
+        for item in content.items:  # pylint: disable=not-an-iterable
             data.append({
-                **child,
-                'published_on': _format_date(child['published_on']),
-                'edited_on': _format_date(child['edited_on']),
+                **item,
+                'published_on': _format_date(item['published_on']),
+                'edited_on': _format_date(item['edited_on']),
             })
 
         json = {
@@ -183,7 +205,9 @@ class SummaryHookAside(XBlockAside):
         """
         fragment = Fragment('')
 
-        if not _children_have_summarizable_content(block):
+        # Check if there is content that worths summarizing
+        content = _parse_children_contents(block)
+        if content.length < settings.SUMMARY_HOOK_MIN_SIZE:
             return fragment
 
         # thirdparty=true connects to the unauthenticated handler for now,
