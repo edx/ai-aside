@@ -15,13 +15,8 @@ from ai_aside.summaryhook_aside.block import (
 fake_transcript = 'This is the text version from the transcript'
 
 
-class FakeTranscript():
-    def convert(transcript, format, output):
-        return fake_transcript
-
-
-def fake_get_transcript(child):
-    return ['This is a transcript']
+def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):
+    return (fake_transcript, 'unused', 'unused')
 
 
 class FakeChild:
@@ -55,7 +50,6 @@ class FakeBlock:
 class TestSummaryHookAside(TestCase):
     def setUp(self):
         module_mock = MagicMock()
-        module_mock.Transcript = FakeTranscript
         module_mock.get_transcript = fake_get_transcript
         modules = {'xmodule.video_block.transcripts_utils': module_mock}
         patch.dict('sys.modules', modules).start()
