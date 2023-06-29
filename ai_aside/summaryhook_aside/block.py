@@ -53,7 +53,7 @@ def _extract_child_contents(child, category):
 
     try:
         # pylint: disable=import-outside-toplevel
-        from xmodule.video_block.transcripts_utils import Transcript, get_transcript
+        from xmodule.video_block.transcripts_utils import get_transcript
     except ImportError:
         return None
 
@@ -68,11 +68,8 @@ def _extract_child_contents(child, category):
 
     if category == 'video':
         try:
-            transcript = get_transcript(child)[0]
-            transcript_format = child.transcript_download_format
-            text = Transcript.convert(transcript, transcript_format, 'txt')
-
-            return text
+            transcript, _, _ = get_transcript(child, output_format='txt')
+            return transcript
         except AttributeError:
             return None
 
