@@ -30,7 +30,7 @@ lxml==4.9.2
     # via xblock
 markupsafe==2.1.3
     # via xblock
-newrelic==8.8.0
+newrelic==8.8.1
     # via edx-django-utils
 pbr==5.11.1
     # via stevedore
@@ -56,7 +56,7 @@ sqlparse==0.4.4
     # via django
 stevedore==5.1.0
     # via edx-django-utils
-typing-extensions==4.6.3
+typing-extensions==4.7.0
     # via asgiref
 web-fragments==2.0.0
     # via xblock
