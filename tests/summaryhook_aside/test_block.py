@@ -46,7 +46,7 @@ class FakeBlock:
         return self.children
 
 
-@override_settings(SUMMARY_HOOK_MIN_SIZE=40)
+@override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
 class TestSummaryHookAside(TestCase):
     def setUp(self):
         module_mock = MagicMock()
@@ -195,6 +195,51 @@ class TestSummaryHookAside(TestCase):
                 'definition_id': 'def-id-02',
                 'content_type': 'TEXT',
                 'content_text': 'Nothing',
+                'published_on': 'published-on-02',
+                'edited_on': 'edited-on-02',
+            }]
+        )
+
+        length, items = _parse_children_contents(block)
+        self.assertEqual(length, expected_length)
+        self.assertEqual(items, expected_items)
+
+    def test_parse_children_contents_with_script_or_style_tags(self):
+        children = [
+            FakeChild('html', '01', '''
+                <span>This should be the only text to be extracted.</span>
+                <test>For testing purposes only, this tag is ignored as well</test>
+                <script>
+                  function ignore() {
+                    console.log('This content should be ignored.');
+                  }
+                </script>
+                <script type="text/javascript">
+                  console.log('This should be ignored as well.')
+                </script>
+                <script src="https://nevermind.me/i-should-also-be-discarded.js" type="text/javascript"></script>'''),
+            FakeChild('html', '02', '''
+                <div class="cypher">Why oh why didn't I take the <em>BLUE</em> pill?</div>
+                <style>
+                  .cypher em {
+                    color: #00f;
+                  }
+                </style>'''),
+        ]
+        block = FakeBlock(children)
+
+        expected_length, expected_items = (
+            84,
+            [{
+                'definition_id': 'def-id-01',
+                'content_type': 'TEXT',
+                'content_text': 'This should be the only text to be extracted.',
+                'published_on': 'published-on-01',
+                'edited_on': 'edited-on-01',
+            }, {
+                'definition_id': 'def-id-02',
+                'content_type': 'TEXT',
+                'content_text': 'Why oh why didn\'t I take the BLUE pill?',
                 'published_on': 'published-on-02',
                 'edited_on': 'edited-on-02',
             }]

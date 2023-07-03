@@ -9,3 +9,4 @@ def plugin_settings(settings):
     settings.SUMMARY_HOOK_HOST = env_tokens.get('SUMMARY_HOOK_HOST', '')
     settings.SUMMARY_HOOK_JS_PATH = env_tokens.get('SUMMARY_HOOK_JS_PATH', '')
     settings.AISPOT_LMS_NAME = env_tokens.get('AISPOT_LMS_NAME', '')
+    settings.HTML_TAGS_TO_REMOVE = ['script', 'style']
