@@ -28,7 +28,18 @@ One Time Setup
 
 Local testing
 ~~~~~~~~~~~~~
-To test your changes locally, you will need to install the package from your local branch into edx-platform. For example, if using devstack, copy or clone your branch into <devstack-parent>/src/ai-aside. Then, in an lms or cms shell, run ``pip install -e /edx/src/ai-aside``.  The plug-in configuration will automatically be picked up once installed, and changes will be hot reloaded.
+To test your changes locally, you will need to install the package from your local branch into edx-platform. For example, if using devstack, copy or clone your branch into <devstack-parent>/src/ai-aside. Then, in an lms or cms shell, run::
+
+  pip install -e /edx/src/ai-aside
+
+The plug-in configuration will automatically be picked up once installed, and changes will be hot reloaded.
+
+Run Migrations
+..............
+You will also need to run migrations for local testing. Using the same lms or cms shell as before, run::
+
+  ./manage.py lms migrate ai_aside
+
 
 Testing in Docker with AI-spot
 ..............................

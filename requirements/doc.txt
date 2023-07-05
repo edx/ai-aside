@@ -31,7 +31,6 @@ certifi==2023.5.7
 cffi==1.15.1
     # via
     #   -r requirements/test.txt
-    #   cryptography
     #   pynacl
 charset-normalizer==3.1.0
     # via requests
@@ -46,9 +45,7 @@ coverage[toml]==7.2.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==41.0.1
-    # via secretstorage
-django==3.2.19
+django==3.2.20
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
@@ -73,7 +70,9 @@ docutils==0.19
     #   sphinx
 edx-django-utils==5.5.0
     # via -r requirements/test.txt
-exceptiongroup==1.1.1
+edx-opaque-keys==2.3.0
+    # via -r requirements/test.txt
+exceptiongroup==1.1.2
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -85,7 +84,7 @@ idna==3.4
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==6.6.0
+importlib-metadata==6.7.0
     # via
     #   keyring
     #   sphinx
@@ -98,22 +97,18 @@ iniconfig==2.0.0
     #   pytest
 jaraco-classes==3.2.3
     # via keyring
-jeepney==0.8.0
-    # via
-    #   keyring
-    #   secretstorage
 jinja2==3.1.2
     # via
     #   -r requirements/test.txt
     #   code-annotations
     #   sphinx
-keyring==23.13.1
+keyring==24.2.0
     # via twine
-lxml==4.9.2
+lxml==4.9.3
     # via
     #   -r requirements/test.txt
     #   xblock
-markdown-it-py==2.2.0
+markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.3
     # via
@@ -124,7 +119,7 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via jaraco-classes
-newrelic==8.8.0
+newrelic==8.8.1
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -141,7 +136,7 @@ pbr==5.11.1
     #   stevedore
 pkginfo==1.9.6
     # via twine
-pluggy==1.0.0
+pluggy==1.2.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -163,13 +158,17 @@ pygments==2.15.1
     #   readme-renderer
     #   rich
     #   sphinx
+pymongo==3.13.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-opaque-keys
 pynacl==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
 pyproject-hooks==1.0.0
     # via build
-pytest==7.3.2
+pytest==7.4.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -197,7 +196,7 @@ pyyaml==6.0
     #   -r requirements/test.txt
     #   code-annotations
     #   xblock
-readme-renderer==37.3
+readme-renderer==40.0
     # via twine
 requests==2.31.0
     # via
@@ -210,10 +209,8 @@ restructuredtext-lint==1.4.0
     # via doc8
 rfc3986==2.0.0
     # via twine
-rich==13.4.1
+rich==13.4.2
     # via twine
-secretstorage==3.3.3
-    # via keyring
 six==1.16.0
     # via
     #   -r requirements/test.txt
@@ -224,9 +221,8 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.4.1
     # via beautifulsoup4
-sphinx==5.3.0
+sphinx==6.2.1
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/doc.in
     #   pydata-sphinx-theme
     #   sphinx-book-theme
@@ -254,6 +250,7 @@ stevedore==5.1.0
     #   code-annotations
     #   doc8
     #   edx-django-utils
+    #   edx-opaque-keys
 text-unidecode==1.3
     # via
     #   -r requirements/test.txt
@@ -268,7 +265,7 @@ tomli==2.0.1
     #   pytest
 twine==4.0.2
     # via -r requirements/doc.in
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via
     #   -r requirements/test.txt
     #   asgiref
