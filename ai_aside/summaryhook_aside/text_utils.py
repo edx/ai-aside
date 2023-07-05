@@ -5,6 +5,8 @@ Text manipulation utils.
 from html.parser import HTMLParser
 from re import sub
 
+from django.conf import settings
+
 
 def cleanup_text(text):
     """
@@ -22,19 +24,27 @@ class _HTMLToTextHelper(HTMLParser):  # lint-amnesty, pylint: disable=abstract-m
     """
     Helper function for html_to_text below
     """
+    _is_content = True
 
     def __init__(self):
         HTMLParser.__init__(self)
         self.reset()
         self.fed = []
 
+    def handle_starttag(self, tag, _):
+        """This runs when a new tag is found. We use this to exclude unwanted content."""
+        tags_to_filter = getattr(settings, 'HTML_TAGS_TO_REMOVE', None)
+        self._is_content = not (tags_to_filter and tag in tags_to_filter)
+
     def handle_data(self, data):
         """takes the data in separate chunks"""
-        self.fed.append(data)
+        if self._is_content:
+            self.fed.append(data)
 
     def handle_entityref(self, name):
         """appends the reference to the body"""
-        self.fed.append('&%s;' % name)
+        if self._is_content:
+            self.fed.append('&%s;' % name)
 
     def get_data(self):
         """joins together the seperate chunks into one cohesive string"""

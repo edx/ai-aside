@@ -14,6 +14,15 @@ Change Log
 Unreleased
 **********
 
+2.0.2 – 2023-07-05
+**********************************************
+
+Fix
+=====
+
+* Updated HTML parser to remove tags with their content for specific cases like `<script>` or `<style>`.
+
+
 2.0.1 – 2023-06-29
 **********************************************
 
