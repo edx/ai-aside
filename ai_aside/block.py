@@ -10,8 +10,8 @@ from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
-from ai_aside.summaryhook_aside.text_utils import html_to_text
-from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
+from ai_aside.text_utils import html_to_text
+from ai_aside.waffle import summary_enabled, summary_staff_only
 
 # map block types to what ai-spot expects for content types
 CATEGORY_TYPE_MAP = {

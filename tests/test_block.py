@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from django.test import TestCase, override_settings
 
-from ai_aside.summaryhook_aside.block import (
+from ai_aside.block import (
     _check_summarizable,
     _extract_child_contents,
     _format_date,

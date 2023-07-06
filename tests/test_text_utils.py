@@ -1,7 +1,7 @@
 import unittest
 from textwrap import dedent
 
-from ai_aside.summaryhook_aside.text_utils import html_to_text
+from ai_aside.text_utils import html_to_text
 
 
 class TestSummaryHookAside(unittest.TestCase):
