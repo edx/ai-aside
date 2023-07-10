@@ -14,6 +14,11 @@ Change Log
 Unreleased
 **********
 
+Fix
+=====
+
+feat: [ACADEMIC-16207] Added models to summaryhook_aside (Has migrations)
+
 2.0.2 – 2023-07-05
 **********************************************
 
