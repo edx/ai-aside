@@ -14,9 +14,15 @@ Change Log
 Unreleased
 **********
 
-feat: [ACADEMIC-16207] Added models to summaryhook_aside (Has migrations)
 
-feat: [ACADEMIC-16177] Catch exceptions in a couple of locations so the aside cannot crash content.
+3.0.0 – 2023-07-16
+**********************************************
+
+Features
+=========
+* Summary content handler now requires a staff user identity, otherwise returns 403. This is a breaking change.
+* Added models to summaryhook_aside (Has migrations)
+* Catch exceptions in a couple of locations so the aside cannot crash content.
 
 2.0.2 – 2023-07-05
 **********************************************
