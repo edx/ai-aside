@@ -132,10 +132,9 @@ setup(
     entry_points={
         "lms.djangoapp": [
             "ai_aside = ai_aside.apps:AiAsideConfig",
-            "summaryhook = ai_aside.summaryhook_aside.apps:SummaryHookConfig",
         ],
         "xblock_asides.v1": [
-            "summaryhook_aside = ai_aside.summaryhook_aside.block:SummaryHookAside",
+            "summaryhook_aside = ai_aside.block:SummaryHookAside",
         ],
     },
 

@@ -1,6 +1,6 @@
 # pyright: reportMissingImports=false
 
-"""Xblock aside enabling OpenAI driven summaries"""
+"""Xblock aside enabling OpenAI driven summaries."""
 
 from datetime import datetime
 
@@ -10,8 +10,8 @@ from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
-from ai_aside.summaryhook_aside.text_utils import html_to_text
-from ai_aside.summaryhook_aside.waffle import summary_enabled, summary_staff_only
+from ai_aside.text_utils import html_to_text
+from ai_aside.waffle import summary_enabled, summary_staff_only
 
 # map block types to what ai-spot expects for content types
 CATEGORY_TYPE_MAP = {
@@ -49,8 +49,9 @@ def _render_summary(context):
 def _extract_child_contents(child, category):
     """
     Process the child contents based on its category.
-    """
 
+    Returns a string.
+    """
     try:
         # pylint: disable=import-outside-toplevel
         from xmodule.video_block.transcripts_utils import get_transcript
@@ -78,10 +79,10 @@ def _extract_child_contents(child, category):
 
 def _parse_children_contents(block):
     """
-    Extracts the analyzable contents from its children.
-    Returns length and an item list
-    """
+    Extract the analyzable contents from block children.
 
+    Returns length and an item list.
+    """
     if not _check_summarizable(block):
         return 0, []
 
@@ -114,11 +115,10 @@ def _parse_children_contents(block):
 
 def _check_summarizable(block):
     """
-    Only if a unit contains HTML blocks with at least a child
-    with sufficient text in them is it worth injecting the summarizer.
+    First pass check if a block has or does not have sufficient text to summarize.
+
     We don't sanitize the content due to performance in this first check.
     """
-
     children = block.get_children()
 
     content_length = 0
@@ -142,21 +142,18 @@ def _check_summarizable(block):
 
 class SummaryHookAside(XBlockAside):
     """
-    XBlock aside that injects AI summary javascript
+    XBlock aside that injects AI summary javascript.
     """
 
     def _get_block(self):
-        """
-        Gets the block wrapped by this aside.
-        """
-
+        """Get the block wrapped by this aside."""
         from xmodule.modulestore.django import modulestore  # pylint: disable=import-error, import-outside-toplevel
         return modulestore().get_item(self.scope_ids.usage_id.usage_key)
 
     @XBlock.handler
     def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
-        Shell handler to the summary xblock aside.
+        Extract and return summarizable text from unit children.
         """
         block = self._get_block()
         valid = self.should_apply_to_block(block)
@@ -192,9 +189,7 @@ class SummaryHookAside(XBlockAside):
 
     @XBlockAside.aside_for('student_view')
     def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
-        """
-        Renders the aside contents for the student view
-        """
+        """Render the aside contents for the student view."""
         fragment = Fragment('')
 
         # Check if there is content that worths summarizing
@@ -226,11 +221,7 @@ class SummaryHookAside(XBlockAside):
 
     @classmethod
     def should_apply_to_block(cls, block):
-        """
-        Overrides base XBlockAside implementation. Indicates whether this aside should
-        apply to a given block type, course, and user.
-        """
-
+        """Determine whether this aside should apply to a given block type, course, and user."""
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key

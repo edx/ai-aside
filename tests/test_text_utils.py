@@ -1,10 +1,12 @@
+"""Tests for text utils used by the blocks"""
 import unittest
 from textwrap import dedent
 
-from ai_aside.summaryhook_aside.text_utils import html_to_text
+from ai_aside.text_utils import html_to_text
 
 
 class TestSummaryHookAside(unittest.TestCase):
+    """Tests of text utils as used by the summary hook"""
     def test_html_to_text(self):
         html_content = '''\
             <div>

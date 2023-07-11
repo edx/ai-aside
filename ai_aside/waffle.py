@@ -1,5 +1,6 @@
 """
 Waffle flag controlling summary hook distribution.
+
 Xblocks do not generally use waffle flags,
 import at use time method taken from the LTI Xblock
 """
@@ -35,7 +36,7 @@ SUMMARYHOOK_STAFF_ONLY = 'summaryhook_staff_only'
 
 def _get_summaryhook_waffle_flag(flag_name):
     """
-    Import and return Waffle flag for enabling the summary hook
+    Import and return Waffle flag for enabling the summary hook.
     """
     # pylint: disable=import-error,import-outside-toplevel
     from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag

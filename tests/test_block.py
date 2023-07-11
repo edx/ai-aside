@@ -1,3 +1,4 @@
+"""Tests for the block."""
 import unittest
 from datetime import datetime
 from textwrap import dedent
@@ -5,21 +6,17 @@ from unittest.mock import MagicMock, patch
 
 from django.test import TestCase, override_settings
 
-from ai_aside.summaryhook_aside.block import (
-    _check_summarizable,
-    _extract_child_contents,
-    _format_date,
-    _parse_children_contents,
-)
+from ai_aside.block import _check_summarizable, _extract_child_contents, _format_date, _parse_children_contents
 
 fake_transcript = 'This is the text version from the transcript'
 
 
-def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):
+def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):  # pylint: disable=unused-argument
     return (fake_transcript, 'unused', 'unused')
 
 
 class FakeChild:
+    """Fake child block for testing"""
     transcript_download_format = 'txt'
 
     def __init__(self, category, test_id='test-id', test_html='<div>This is a test</div>'):
@@ -39,6 +36,7 @@ class FakeChild:
 
 
 class FakeBlock:
+    "Fake block for testing, returns given children"
     def __init__(self, children):
         self.children = children
 
@@ -48,6 +46,7 @@ class FakeBlock:
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
 class TestSummaryHookAside(TestCase):
+    """Summary hook aside tests"""
     def setUp(self):
         module_mock = MagicMock()
         module_mock.get_transcript = fake_get_transcript
