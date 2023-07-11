@@ -2,6 +2,7 @@
 
 """Xblock aside enabling OpenAI driven summaries."""
 
+import logging
 from datetime import datetime
 
 from django.conf import settings
@@ -12,6 +13,8 @@ from xblock.core import XBlock, XBlockAside
 
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summary_enabled, summary_staff_only
+
+log = logging.getLogger(__name__)
 
 # map block types to what ai-spot expects for content types
 CATEGORY_TYPE_MAP = {
@@ -189,7 +192,28 @@ class SummaryHookAside(XBlockAside):
 
     @XBlockAside.aside_for('student_view')
     def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
-        """Render the aside contents for the student view."""
+        """
+        Render the aside contents for the student view.
+
+        Returns a Fragment.
+
+        This function absorbs all exceptions to protect the LMS,
+        delegating real work to _student_view_can_throw
+        """
+        try:
+            return self._student_view_can_throw(block)
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            log.error(f'Summary hook aside suppressed exception during student_view_aside: {ex}')
+            return Fragment('')
+
+    def _student_view_can_throw(self, block):
+        """
+        Render the aside contents for the student view.
+
+        Returns a Fragment.
+
+        This function can throw exceptions.
+        """
         fragment = Fragment('')
 
         # Check if there is content that worths summarizing
@@ -221,7 +245,25 @@ class SummaryHookAside(XBlockAside):
 
     @classmethod
     def should_apply_to_block(cls, block):
-        """Determine whether this aside should apply to a given block type, course, and user."""
+        """
+        Determine whether this aside should apply to a given block type, course, and user.
+
+        This function absorbs all exceptions to protect the LMS,
+        delegating real work to _should_apply_throws.
+        """
+        try:
+            return cls._should_apply_can_throw(block)
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            log.error(f'Summary hook aside suppressed exception during should_apply_to_block: {ex}')
+            return False
+
+    @classmethod
+    def _should_apply_can_throw(cls, block):
+        """
+        Determine whether this aside should apply to a given block type, course, and user.
+
+        This function can throw exceptions.
+        """
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key
