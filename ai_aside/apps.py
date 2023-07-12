@@ -3,7 +3,7 @@ ai_aside Django application initialization.
 """
 
 from django.apps import AppConfig
-from edx_django_utils.plugins.constants import PluginSettings
+from edx_django_utils.plugins.constants import PluginSettings, PluginURLs
 
 
 class AiAsideConfig(AppConfig):
@@ -13,6 +13,13 @@ class AiAsideConfig(AppConfig):
 
     name = 'ai_aside'
     plugin_app = {
+        'url_config': {
+            'lms.djangoapp': {
+                'namespace': 'ai_aside',
+                'regex': '^ai_aside/',
+                'relative_path': 'urls',
+            },
+        },      
         PluginSettings.CONFIG: {
             'lms.djangoapp': {
                 'common': {
