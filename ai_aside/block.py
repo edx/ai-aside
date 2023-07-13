@@ -1,5 +1,3 @@
-# pyright: reportMissingImports=false
-
 """Xblock aside enabling OpenAI driven summaries."""
 
 import logging
@@ -11,6 +9,7 @@ from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
+from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summary_enabled, summary_staff_only
 
@@ -55,9 +54,6 @@ def _extract_child_contents(child, category):
 
     Returns a string.
     """
-    # pylint: disable=import-outside-toplevel
-    from xmodule.video_block.transcripts_utils import get_transcript
-
     if category == 'html':
         content_html = child.get_html()
         text = html_to_text(content_html)
@@ -65,7 +61,7 @@ def _extract_child_contents(child, category):
         return text
 
     if category == 'video':
-        transcript, _, _ = get_transcript(child, output_format='txt')
+        transcript = get_text_transcript(child)
         return transcript
 
     return None
@@ -135,17 +131,12 @@ class SummaryHookAside(XBlockAside):
     XBlock aside that injects AI summary javascript.
     """
 
-    def _get_block(self):
-        """Get the block wrapped by this aside."""
-        from xmodule.modulestore.django import modulestore  # pylint: disable=import-error, import-outside-toplevel
-        return modulestore().get_item(self.scope_ids.usage_id.usage_key)
-
     @XBlock.handler
     def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
         Extract and return summarizable text from unit children.
         """
-        block = self._get_block()
+        block = get_block(self.scope_ids.usage_id.usage_key)
         valid = self.should_apply_to_block(block)
 
         if not valid:
