@@ -1,7 +1,6 @@
-# pyright: reportMissingImports=false
-
 """Xblock aside enabling OpenAI driven summaries."""
 
+import logging
 from datetime import datetime
 
 from django.conf import settings
@@ -10,8 +9,11 @@ from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
+from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summary_enabled, summary_staff_only
+
+log = logging.getLogger(__name__)
 
 # map block types to what ai-spot expects for content types
 CATEGORY_TYPE_MAP = {
@@ -52,27 +54,15 @@ def _extract_child_contents(child, category):
 
     Returns a string.
     """
-    try:
-        # pylint: disable=import-outside-toplevel
-        from xmodule.video_block.transcripts_utils import get_transcript
-    except ImportError:
-        return None
-
     if category == 'html':
-        try:
-            content_html = child.get_html()
-            text = html_to_text(content_html)
+        content_html = child.get_html()
+        text = html_to_text(content_html)
 
-            return text
-        except AttributeError:
-            return None
+        return text
 
     if category == 'video':
-        try:
-            transcript, _, _ = get_transcript(child, output_format='txt')
-            return transcript
-        except AttributeError:
-            return None
+        transcript = get_text_transcript(child)
+        return transcript
 
     return None
 
@@ -124,18 +114,14 @@ def _check_summarizable(block):
     content_length = 0
 
     for child in children:
-        try:
-            category = child.category
-            if category == 'html':
-                content_length += len(child.get_html())
-                if content_length > settings.SUMMARY_HOOK_MIN_SIZE:
-                    return True
-
-            if category == 'video':
+        category = child.category
+        if category == 'html':
+            content_length += len(child.get_html())
+            if content_length > settings.SUMMARY_HOOK_MIN_SIZE:
                 return True
 
-        except AttributeError:
-            pass
+        if category == 'video':
+            return True
 
     return False
 
@@ -145,17 +131,12 @@ class SummaryHookAside(XBlockAside):
     XBlock aside that injects AI summary javascript.
     """
 
-    def _get_block(self):
-        """Get the block wrapped by this aside."""
-        from xmodule.modulestore.django import modulestore  # pylint: disable=import-error, import-outside-toplevel
-        return modulestore().get_item(self.scope_ids.usage_id.usage_key)
-
     @XBlock.handler
     def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
         Extract and return summarizable text from unit children.
         """
-        block = self._get_block()
+        block = get_block(self.scope_ids.usage_id.usage_key)
         valid = self.should_apply_to_block(block)
 
         if not valid:
@@ -189,7 +170,28 @@ class SummaryHookAside(XBlockAside):
 
     @XBlockAside.aside_for('student_view')
     def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
-        """Render the aside contents for the student view."""
+        """
+        Render the aside contents for the student view.
+
+        Returns a Fragment.
+
+        This function absorbs all exceptions to protect the LMS,
+        delegating real work to _student_view_can_throw
+        """
+        try:
+            return self._student_view_can_throw(block)
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            log.error(f'Summary hook aside suppressed exception during student_view_aside: {ex}')
+            return Fragment('')
+
+    def _student_view_can_throw(self, block):
+        """
+        Render the aside contents for the student view.
+
+        Returns a Fragment.
+
+        This function can throw exceptions.
+        """
         fragment = Fragment('')
 
         # Check if there is content that worths summarizing
@@ -221,7 +223,25 @@ class SummaryHookAside(XBlockAside):
 
     @classmethod
     def should_apply_to_block(cls, block):
-        """Determine whether this aside should apply to a given block type, course, and user."""
+        """
+        Determine whether this aside should apply to a given block type, course, and user.
+
+        This function absorbs all exceptions to protect the LMS,
+        delegating real work to _should_apply_throws.
+        """
+        try:
+            return cls._should_apply_can_throw(block)
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            log.error(f'Summary hook aside suppressed exception during should_apply_to_block: {ex}')
+            return False
+
+    @classmethod
+    def _should_apply_can_throw(cls, block):
+        """
+        Determine whether this aside should apply to a given block type, course, and user.
+
+        This function can throw exceptions.
+        """
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key

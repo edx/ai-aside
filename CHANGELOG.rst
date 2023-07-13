@@ -14,10 +14,9 @@ Change Log
 Unreleased
 **********
 
-Fix
-=====
-
 feat: [ACADEMIC-16207] Added models to summaryhook_aside (Has migrations)
+
+feat: [ACADEMIC-16177] Catch exceptions in a couple of locations so the aside cannot crash content.
 
 2.0.2 – 2023-07-05
 **********************************************
