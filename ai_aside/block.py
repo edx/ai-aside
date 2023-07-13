@@ -55,27 +55,18 @@ def _extract_child_contents(child, category):
 
     Returns a string.
     """
-    try:
-        # pylint: disable=import-outside-toplevel
-        from xmodule.video_block.transcripts_utils import get_transcript
-    except ImportError:
-        return None
+    # pylint: disable=import-outside-toplevel
+    from xmodule.video_block.transcripts_utils import get_transcript
 
     if category == 'html':
-        try:
-            content_html = child.get_html()
-            text = html_to_text(content_html)
+        content_html = child.get_html()
+        text = html_to_text(content_html)
 
-            return text
-        except AttributeError:
-            return None
+        return text
 
     if category == 'video':
-        try:
-            transcript, _, _ = get_transcript(child, output_format='txt')
-            return transcript
-        except AttributeError:
-            return None
+        transcript, _, _ = get_transcript(child, output_format='txt')
+        return transcript
 
     return None
 
@@ -127,18 +118,14 @@ def _check_summarizable(block):
     content_length = 0
 
     for child in children:
-        try:
-            category = child.category
-            if category == 'html':
-                content_length += len(child.get_html())
-                if content_length > settings.SUMMARY_HOOK_MIN_SIZE:
-                    return True
-
-            if category == 'video':
+        category = child.category
+        if category == 'html':
+            content_length += len(child.get_html())
+            if content_length > settings.SUMMARY_HOOK_MIN_SIZE:
                 return True
 
-        except AttributeError:
-            pass
+        if category == 'video':
+            return True
 
     return False
 
