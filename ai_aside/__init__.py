@@ -2,4 +2,4 @@
 A plugin containing xblocks and apps supporting GPT and other LLM use on edX.
 """
 
-__version__ = '2.0.2'
+__version__ = '3.0.0'
