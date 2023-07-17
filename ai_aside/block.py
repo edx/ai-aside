@@ -43,6 +43,10 @@ def _format_date(date):
     return date.strftime('%Y-%m-%d %H:%M:%S') if isinstance(date, datetime) else None
 
 
+def _staff_user(block):
+    return getattr(block.runtime, 'user_is_staff', False)
+
+
 def _render_summary(context):
     template = Template(summary_fragment)
     return template.render(Context(context))
@@ -135,7 +139,13 @@ class SummaryHookAside(XBlockAside):
     def summary_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
         Extract and return summarizable text from unit children.
+
+        Only services and staff users are allowed to fetch summary text, everyone else
+        gets an unhelpful 403.
         """
+        if not _staff_user(self):
+            return Response(status=403)
+
         block = get_block(self.scope_ids.usage_id.usage_key)
         valid = self.should_apply_to_block(block)
 
@@ -199,14 +209,7 @@ class SummaryHookAside(XBlockAside):
         if length < settings.SUMMARY_HOOK_MIN_SIZE:
             return fragment
 
-        # thirdparty=true connects to the unauthenticated handler for now,
-        # we will secure it in ACADEMIC-16187
-        handler_url = self.runtime.handler_url(self, 'summary_handler', thirdparty=True)
-
-        # enable ai-spot to see the LMS when they are installed together in devstack
-        aispot_lms_name = settings.AISPOT_LMS_NAME
-        if aispot_lms_name != '':
-            handler_url = handler_url.replace('localhost', aispot_lms_name)
+        handler_url = self._summary_handler_url()
 
         fragment.add_content(
             _render_summary(
@@ -220,6 +223,24 @@ class SummaryHookAside(XBlockAside):
             )
         )
         return fragment
+
+    def _summary_handler_url(self):
+        """
+        Generate the summary handler URL for this block.
+
+        A separate function to handle overrides required
+        for the unusual use of the handler (non-edx codebase edx service)
+        and to override the URL for use in devstack.
+        """
+        # thirdparty=true gives the full host name and unauthenticated handler
+        handler_url = self.runtime.handler_url(self, 'summary_handler', thirdparty=True)
+        # but we want the authenticated handler
+        handler_url = handler_url.replace('handler_noauth', 'handler')
+        # enable ai-spot to see the LMS when they are installed together in devstack
+        aispot_lms_name = settings.AISPOT_LMS_NAME
+        if aispot_lms_name != '':
+            handler_url = handler_url.replace('localhost', aispot_lms_name)
+        return handler_url
 
     @classmethod
     def should_apply_to_block(cls, block):
@@ -245,7 +266,6 @@ class SummaryHookAside(XBlockAside):
         if getattr(block, 'category', None) != 'vertical':
             return False
         course_key = block.scope_ids.usage_id.course_key
-        if (getattr(block.runtime, 'user_is_staff', False)
-                and summary_staff_only(course_key)):
+        if _staff_user(block) and summary_staff_only(course_key):
             return True
         return summary_enabled(course_key)
