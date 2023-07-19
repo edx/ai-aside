@@ -9,3 +9,4 @@ build/
 dist/
 .vscode/
 ai_aside.egg-info/
+.DS_Store

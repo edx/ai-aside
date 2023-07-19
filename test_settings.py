@@ -26,14 +26,18 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
     'ai_aside',
-)
+]
+
+THIRD_PARTY_APPS = [
+    'rest_framework',
+]
 
 LOCALE_PATHS = [
     root('ai_aside', 'conf', 'locale'),
@@ -44,9 +48,9 @@ ROOT_URLCONF = 'ai_aside.urls'
 SECRET_KEY = 'insecure-secret-key'
 
 MIDDLEWARE = (
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
 TEMPLATES = [{

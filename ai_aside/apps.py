@@ -13,6 +13,13 @@ class AiAsideConfig(AppConfig):
 
     name = 'ai_aside'
     plugin_app = {
+        'url_config': {
+            'lms.djangoapp': {
+                'namespace': 'ai_aside',
+                'regex': '^ai_aside/',
+                'relative_path': 'urls',
+            },
+        },
         PluginSettings.CONFIG: {
             'lms.djangoapp': {
                 'common': {
