@@ -209,14 +209,18 @@ class SummaryHookAside(XBlockAside):
         if length < settings.SUMMARY_HOOK_MIN_SIZE:
             return fragment
 
+        usage_id = block.scope_ids.usage_id
+
+        log.info(f'Summary hook injecting into {usage_id}')
+
         handler_url = self._summary_handler_url()
 
         fragment.add_content(
             _render_summary(
                 {
                     'data_url_api': settings.SUMMARY_HOOK_HOST,
-                    'data_course_id': block.scope_ids.usage_id.course_key,
-                    'data_content_id': block.scope_ids.usage_id,
+                    'data_course_id': usage_id.course_key,
+                    'data_content_id': usage_id,
                     'data_handler_url': handler_url,
                     'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
                 }

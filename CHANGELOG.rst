@@ -14,6 +14,10 @@ Change Log
 Unreleased
 **********
 
+3.0.1 – 2023-07-20
+**********************************************
+
+* Add positive log when summary fragement decides to inject
 
 3.0.0 – 2023-07-16
 **********************************************
