@@ -14,6 +14,14 @@ Change Log
 Unreleased
 **********
 
+3.1.0 – 2023-07-20
+**********************************************
+
+Features
+=========
+
+* Added API endpoints for updating settings for courses and modules (enable/disable for now) (Has migrations)
+
 3.0.1 – 2023-07-20
 **********************************************
 

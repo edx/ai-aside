@@ -11,16 +11,11 @@ class AIAsideCourseEnabled(models.Model):
     Maps Course Key to enabled boolean.
     """
 
-    course_key = CourseKeyField(db_index=True, max_length=255)
+    course_key = CourseKeyField(db_index=True, max_length=255, unique=True)
     enabled = models.BooleanField(default=False, null=False)
 
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     modified = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        """Default order."""
-
-        ordering = ['-created']
 
     def __str__(self):
         """Query."""
@@ -50,9 +45,9 @@ class AIAsideUnitEnabled(models.Model):
     modified = models.DateTimeField(auto_now=True)
 
     class Meta:
-        """Default order."""
+        """Course and unit are unique together."""
 
-        ordering = ['-created']
+        unique_together = ('course_key', 'unit_key')
 
     def __str__(self):
         """Query."""
