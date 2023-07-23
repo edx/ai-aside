@@ -21,7 +21,7 @@ click==8.1.6
     #   -r requirements/base.txt
     #   code-annotations
     #   edx-django-utils
-code-annotations==1.3.0
+code-annotations==1.5.0
     # via -r requirements/test.in
 coverage[toml]==7.2.7
     # via pytest-cov
