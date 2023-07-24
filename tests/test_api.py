@@ -1,9 +1,9 @@
 """
 Tests for the API
 """
-from django.test import TestCase
 from django.urls import reverse
 from opaque_keys.edx.keys import CourseKey, UsageKey
+from rest_framework.test import APITestCase
 
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
 
@@ -18,14 +18,14 @@ unit_keys = [
 ]
 
 
-class TestApiEndpoints(TestCase):
+class TestApiEndpoints(APITestCase):
     """API Endpoint tests"""
 
     def test_course_enabled_setter_enable_valid(self):
         course_id = course_keys[0]
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
-        response = self.client.post(api_url, {'enabled': True})
+        response = self.client.post(api_url, {'enabled': True}, format='json')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
@@ -45,7 +45,7 @@ class TestApiEndpoints(TestCase):
         )
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
-        response = self.client.post(api_url, {'enabled': False})
+        response = self.client.post(api_url, {'enabled': False}, format='json')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
@@ -60,7 +60,7 @@ class TestApiEndpoints(TestCase):
         course_id = course_keys[0]
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
-        response = self.client.post(api_url, {'foo': 'bar'})
+        response = self.client.post(api_url, {'enabled': 'true'}, format='json')
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['response']['message'], 'Invalid parameters')
@@ -126,7 +126,7 @@ class TestApiEndpoints(TestCase):
             'course_id': course_id,
             'unit_id': unit_id,
         })
-        response = self.client.post(api_url, {'enabled': True})
+        response = self.client.post(api_url, {'enabled': True}, format='json')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
@@ -151,7 +151,7 @@ class TestApiEndpoints(TestCase):
             'course_id': course_id,
             'unit_id': unit_id,
         })
-        response = self.client.post(api_url, {'enabled': False})
+        response = self.client.post(api_url, {'enabled': False}, format='json')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
@@ -170,7 +170,7 @@ class TestApiEndpoints(TestCase):
             'course_id': course_id,
             'unit_id': unit_id,
         })
-        response = self.client.post(api_url, {'foo': 'bar'})
+        response = self.client.post(api_url, {'enabled': 'False'})
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['response']['message'], 'Invalid parameters')
@@ -187,7 +187,7 @@ class TestApiEndpoints(TestCase):
             'course_id': course_id,
             'unit_id': unit_id,
         })
-        response = self.client.post(api_url, {'enabled': True})
+        response = self.client.post(api_url, {'enabled': True}, format='json')
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['response']['message'], 'Invalid Key')
