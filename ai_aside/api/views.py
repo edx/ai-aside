@@ -15,8 +15,6 @@ Delete:
 
 Both GET and DELETE methods respond with a 404 if the setting cannot be found.
 """
-import ast
-
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from rest_framework import status
@@ -64,11 +62,12 @@ class CourseEnabledAPIView(APIView):
 
     def post(self, request, course_id=None):
         """Sets the enabled state for a course"""
-        if (enabledStr := request.data.get('enabled')) is None:
+
+        enabled = request.data.get('enabled')
+
+        if not isinstance(enabled, bool):
             data = {'message': 'Invalid parameters'}
             return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-
-        enabled = ast.literal_eval(enabledStr)
 
         if course_id is None:
             return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
@@ -145,11 +144,11 @@ class UnitEnabledAPIView(APIView):
         if course_id is None or unit_id is None:
             return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
 
-        if (enabledStr := request.data.get('enabled')) is None:
+        enabled = request.data.get('enabled')
+
+        if not isinstance(enabled, bool):
             data = {'message': 'Invalid parameters'}
             return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-
-        enabled = ast.literal_eval(enabledStr)
 
         try:
             course_key = CourseKey.from_string(course_id)
