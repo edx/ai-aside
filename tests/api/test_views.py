@@ -1,6 +1,9 @@
 """
 Tests for the API
 """
+from unittest.mock import patch
+
+import ddt
 from django.urls import reverse
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from rest_framework.test import APITestCase
@@ -18,8 +21,22 @@ unit_keys = [
 ]
 
 
-class TestApiEndpoints(APITestCase):
-    """API Endpoint tests"""
+@ddt.ddt
+class TestApiViews(APITestCase):
+    """API Endpoint View tests"""
+
+    @ddt.data(True, False)
+    @patch('ai_aside.config_api.api.summaries_configuration_enabled')
+    def test_course_configurable(self, enabled, mock_enabled):
+        mock_enabled.return_value = enabled
+        course_id = course_keys[0]
+
+        api_url = reverse('api-course-configurable', kwargs={'course_id': course_id})
+        response = self.client.get(api_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['response']['success'], True)
+        self.assertEqual(response.data['response']['enabled'], enabled)
 
     def test_course_enabled_setter_enable_valid(self):
         course_id = course_keys[0]
@@ -29,7 +46,6 @@ class TestApiEndpoints(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
-        self.assertEqual(response.data['response']['enabled'], True)
 
         res = AIAsideCourseEnabled.objects.filter(course_key=course_id)
 
@@ -41,7 +57,7 @@ class TestApiEndpoints(APITestCase):
 
         AIAsideCourseEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
@@ -49,7 +65,6 @@ class TestApiEndpoints(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
-        self.assertEqual(response.data['response']['enabled'], False)
 
         res = AIAsideCourseEnabled.objects.filter(course_key=course_id)
 
@@ -74,7 +89,7 @@ class TestApiEndpoints(APITestCase):
 
         AIAsideCourseEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
@@ -97,7 +112,7 @@ class TestApiEndpoints(APITestCase):
 
         AIAsideCourseEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
@@ -130,7 +145,6 @@ class TestApiEndpoints(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
-        self.assertEqual(response.data['response']['enabled'], True)
 
         res = AIAsideUnitEnabled.objects.filter(course_key=course_id)
 
@@ -144,7 +158,7 @@ class TestApiEndpoints(APITestCase):
         AIAsideUnitEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
             unit_key=UsageKey.from_string(unit_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-unit-settings', kwargs={
@@ -155,7 +169,6 @@ class TestApiEndpoints(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
-        self.assertEqual(response.data['response']['enabled'], False)
 
         res = AIAsideUnitEnabled.objects.filter(course_key=course_id)
 
@@ -199,7 +212,7 @@ class TestApiEndpoints(APITestCase):
         AIAsideUnitEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
             unit_key=UsageKey.from_string(unit_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-unit-settings', kwargs={
@@ -244,7 +257,7 @@ class TestApiEndpoints(APITestCase):
         AIAsideUnitEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
             unit_key=UsageKey.from_string(unit_id),
-            enabled=True
+            enabled=True,
         )
 
         api_url = reverse('api-unit-settings', kwargs={
@@ -259,7 +272,7 @@ class TestApiEndpoints(APITestCase):
         res = AIAsideUnitEnabled.objects.filter(
             course_key=CourseKey.from_string(course_id),
             unit_key=UsageKey.from_string(unit_id),
-            enabled=True
+            enabled=True,
         )
 
         self.assertEqual(res.count(), 0)

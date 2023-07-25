@@ -14,6 +14,13 @@ Change Log
 Unreleased
 **********
 
+3.2.0 – 2023-07-26
+**********************************************
+
+Features
+=========
+* Added the checks for the module settings behind the waffle flag `summaryhook.summaryhook_summaries_configuration`.
+* Added is this course configurable endpoint
 * Error suppression logs now include block ID
 * Missing video transcript is caught earlier in content fetch
 

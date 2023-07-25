@@ -62,6 +62,52 @@ For the summary aside to work, you will have to make two changes in the LMS admi
 
 2. You must enable a course waffle flag for each course you want to summarize. ``summaryhook.summaryhook_enabled`` is the main one, ``summaryhook_enabled.summaryhook_staff_only`` can be used if you only want staff to see it.
 
+3. You must enable a course waffle flag if you want to use the feature for enabling/disabling the summary by its settings. ``summaryhook.summaryhook_summaries_configuration``. If this flag is enabled, you can enable/disable the courses and the blocks by its settings.
+
+Aside Settings API
+~~~~~~~~~~~~~~~~~~
+
+There are some endpoints that can be used to pinpoint units to be either enabled or disabled based on their configs. The new settings work as follows:
+- If a course is enabled, the summary for all the blocks for that course are enabled by default.
+- If a course is disabled or the setting does not exists, then the summary for all the blocks from that course are disabled by default.
+- If a block has its own settings, it will override any other setting with the one that is saved.
+- If a block does not have any settings saved, then the enabled state will fall back to the course's enabled state mentioned above.
+
+The new endpoints for updating these settings are:
+
+Fetch settings
+..............
+
++--------+-------------------------------------+-------------------------------------------------------------------+
+| Method | Path                                | Responses                                                         |
++========+=====================================+===================================================================+
+| GET    | ``ai_aside/v1/:course_id``          | - Code 200: ``{ "success": true }``                               |
++--------+-------------------------------------+ - Code 400: ``{ "success": false, "message": "(description)" }``  |
+| GET    | ``ai_aside/v1/:course_id/:unit_id`` | - Code 404: ``{ "success": false }``                              |
++--------+-------------------------------------+-------------------------------------------------------------------+
+
+Update settings
+...............
+
++--------+-------------------------------------+-------------------------------+------------------------------------------------------------------+
+| Method | Path                                | Payload                       | Responses                                                        |
++========+=====================================+===============================+==================================================================+
+| POST   | ``ai_aside/v1/:course_id``          | ``{ "enabled": true|false }`` | - Code 200: ``{ "success": true }``                              |
++--------+-------------------------------------+-------------------------------+ - Code 400: ``{ "success": false, "message": "(description)" }`` |
+| POST   | ``ai_aside/v1/:course_id/:unit_id`` | ``{ "enabled": true|false }`` |                                                                  |
++--------+-------------------------------------+-------------------------------+------------------------------------------------------------------+
+
+Delete settings
+...............
+
++--------+-------------------------------------+-------------------------------------------------------------------+
+| Method | Path                                | Responses                                                         |
++========+=====================================+===================================================================+
+| DELETE | ``ai_aside/v1/:course_id``          | - Code 200: ``{ "success": true }``                               |
++--------+-------------------------------------+ - Code 400: ``{ "success": false, "message": "(description)" }``  |
+| DELETE | ``ai_aside/v1/:course_id/:unit_id`` | - Code 404: ``{ "success": false }``                              |
++--------+-------------------------------------+-------------------------------------------------------------------+
+
 Every time you develop something in this repo
 ---------------------------------------------
 .. code-block::
