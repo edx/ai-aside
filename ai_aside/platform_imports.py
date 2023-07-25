@@ -9,10 +9,15 @@ cannot be imported normally.
 
 
 def get_text_transcript(video_block):
-    """Get the transcript for a video block in text format."""
+    """Get the transcript for a video block in text format, or None."""
     # pylint: disable=import-error, import-outside-toplevel
+    from xmodule.exceptions import NotFoundError
     from xmodule.video_block.transcripts_utils import get_transcript
-    transcript, _, _ = get_transcript(video_block, output_format='txt')
+    try:
+        transcript, _, _ = get_transcript(video_block, output_format='txt')
+    except NotFoundError:
+        # some old videos have no transcripts, just accept that reality
+        return None
     return transcript
 
 

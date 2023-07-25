@@ -56,7 +56,7 @@ def _extract_child_contents(child, category):
     """
     Process the child contents based on its category.
 
-    Returns a string.
+    Returns a string or None if there are no contents available.
     """
     if category == 'html':
         content_html = child.get_html()
@@ -65,7 +65,7 @@ def _extract_child_contents(child, category):
         return text
 
     if category == 'video':
-        transcript = get_text_transcript(child)
+        transcript = get_text_transcript(child)  # may be None
         return transcript
 
     return None
@@ -191,7 +191,8 @@ class SummaryHookAside(XBlockAside):
         try:
             return self._student_view_can_throw(block)
         except Exception as ex:  # pylint: disable=broad-exception-caught
-            log.error(f'Summary hook aside suppressed exception during student_view_aside: {ex}')
+            usage_id = block.scope_ids.usage_id
+            log.error(f'Summary hook aside suppressed exception on {usage_id} during student_view_aside: {ex}')
             return Fragment('')
 
     def _student_view_can_throw(self, block):
@@ -257,7 +258,8 @@ class SummaryHookAside(XBlockAside):
         try:
             return cls._should_apply_can_throw(block)
         except Exception as ex:  # pylint: disable=broad-exception-caught
-            log.error(f'Summary hook aside suppressed exception during should_apply_to_block: {ex}')
+            usage_id = block.scope_ids.usage_id
+            log.error(f'Summary hook aside suppressed exception on {usage_id} during should_apply_to_block: {ex}')
             return False
 
     @classmethod
