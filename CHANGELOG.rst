@@ -14,6 +14,9 @@ Change Log
 Unreleased
 **********
 
+* Error suppression logs now include block ID
+* Missing video transcript is caught earlier in content fetch
+
 3.1.0 – 2023-07-20
 **********************************************
 

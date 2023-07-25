@@ -48,9 +48,17 @@ class FakeBlock:
 class TestSummaryHookAside(TestCase):
     """Summary hook aside tests"""
     def setUp(self):
-        module_mock = MagicMock()
-        module_mock.get_transcript = fake_get_transcript
-        modules = {'xmodule.video_block.transcripts_utils': module_mock}
+        transcript_utils_mock = MagicMock()
+        transcript_utils_mock.get_transcript = fake_get_transcript
+
+        xmodule_exceptions_mock = MagicMock()
+        xmodule_exceptions_mock.NotFoundError = MagicMock()
+
+        modules = {
+            'xmodule.exceptions': xmodule_exceptions_mock,
+            'xmodule.video_block.transcripts_utils': transcript_utils_mock,
+        }
+
         patch.dict('sys.modules', modules).start()
 
     def test_format_date(self):
@@ -260,6 +268,82 @@ class TestSummaryHookAside(TestCase):
 
         self.assertEqual(length, 0)
         self.assertEqual(items, [])
+
+
+@override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
+class TestSummaryHookAsideMissingTranscript(TestCase):
+    """Summary hook aside tests for the case where a transcript is missing"""
+    def setUp(self):
+        class FakeNotFoundError(BaseException):
+            pass
+
+        xmodule_exceptions_mock = MagicMock()
+        xmodule_exceptions_mock.NotFoundError = FakeNotFoundError
+
+        def error_get_transcript(child, lang=None, output_format='SRT',
+                                 youtube_id=None):  # pylint: disable=unused-argument
+            raise FakeNotFoundError()
+
+        transcript_utils_mock = MagicMock()
+        transcript_utils_mock.get_transcript = error_get_transcript
+
+        modules = {
+            'xmodule.exceptions': xmodule_exceptions_mock,
+            'xmodule.video_block.transcripts_utils': transcript_utils_mock,
+        }
+
+        patch.dict('sys.modules', modules).start()
+
+    def test_extract_child_contents_with_broken_video(self):
+        category = 'video'
+
+        child = FakeChild(category)
+        content = _extract_child_contents(child, category)
+        self.assertEqual(content, None)
+
+    def test_parse_children_contents_with_partly_valid_children(self):
+        children = [
+            FakeChild('html', '01', '''
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Vivamus dapibus elit lacus, at vehicula arcu vehicula in.
+                    In id felis arcu. Maecenas elit quam, volutpat cursus pharetra vel, tempor at lorem.
+                    Fusce luctus orci quis tempor aliquet.
+                </p>'''),
+            FakeChild('html', '02', '''
+                <Everything on the content on this child is inside a tag, so parsing it would return almost>
+                    Nothing
+                </The quick brown fox jumps over the lazy dog>'''),
+            FakeChild('video', '03'),
+            FakeChild('unknown', '04'),
+        ]
+        block = FakeBlock(children)
+
+        expected_length, expected_items = (
+            245,
+            [{
+                'definition_id': 'def-id-01',
+                'content_type': 'TEXT',
+                'content_text': dedent('''\
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Vivamus dapibus elit lacus, at vehicula arcu vehicula in.
+                    In id felis arcu. Maecenas elit quam, volutpat cursus pharetra vel, tempor at lorem.
+                    Fusce luctus orci quis tempor aliquet.'''),
+                'published_on': 'published-on-01',
+                'edited_on': 'edited-on-01',
+            }, {
+                'definition_id': 'def-id-02',
+                'content_type': 'TEXT',
+                'content_text': 'Nothing',
+                'published_on': 'published-on-02',
+                'edited_on': 'edited-on-02',
+            }]
+        )
+
+        length, items = _parse_children_contents(block)
+
+        self.assertEqual(length, expected_length)
+        self.assertEqual(items, expected_items)
 
 
 if __name__ == '__main__':
