@@ -19,9 +19,25 @@ class AiAsideConfig(AppConfig):
                 'regex': '^ai_aside/',
                 'relative_path': 'urls',
             },
+            'cms.djangoapp': {
+                'namespace': 'ai_aside',
+                'regex': '^ai_aside/',
+                'relative_path': 'urls',
+            },
         },
         PluginSettings.CONFIG: {
             'lms.djangoapp': {
+                'common': {
+                    PluginSettings.RELATIVE_PATH: 'settings.common',
+                },
+                'devstack': {
+                    PluginSettings.RELATIVE_PATH: 'settings.devstack',
+                },
+                'production': {
+                    PluginSettings.RELATIVE_PATH: 'settings.production',
+                },
+            },
+            'cms.djangoapp': {
                 'common': {
                     PluginSettings.RELATIVE_PATH: 'settings.common',
                 },
