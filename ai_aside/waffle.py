@@ -48,7 +48,7 @@ def _is_get_summaryhook_waffle_flag_enabled(flag_name, course_key):
     """
     Import and return Waffle flag for enabling the summary hook.
     """
-    # pylint: disable=import-error,import-outside-toplevel
+    # pylint: disable=import-outside-toplevel
     try:
         from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag
         return CourseWaffleFlag(f'{WAFFLE_NAMESPACE}.{flag_name}', __name__).is_enabled(course_key)
