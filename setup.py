@@ -133,6 +133,9 @@ setup(
         "lms.djangoapp": [
             "ai_aside = ai_aside.apps:AiAsideConfig",
         ],
+        "cms.djangoapp": [
+            "ai_aside = ai_aside.apps:AiAsideConfig",
+        ],
         "xblock_asides.v1": [
             "summaryhook_aside = ai_aside.block:SummaryHookAside",
         ],
