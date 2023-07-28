@@ -9,9 +9,12 @@ from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
+from ai_aside.config_api.api import is_summary_enabled
 from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
-from ai_aside.waffle import summary_enabled, summary_staff_only
+from ai_aside.waffle import summaries_configuration_enabled as ff_is_summary_config_enabled
+from ai_aside.waffle import summary_enabled as ff_summary_enabled
+from ai_aside.waffle import summary_staff_only as ff_summary_staff_only
 
 log = logging.getLogger(__name__)
 
@@ -271,7 +274,17 @@ class SummaryHookAside(XBlockAside):
         """
         if getattr(block, 'category', None) != 'vertical':
             return False
+
         course_key = block.scope_ids.usage_id.course_key
-        if _staff_user(block) and summary_staff_only(course_key):
+        unit_key = block.scope_ids.usage_id
+
+        if _staff_user(block) and ff_summary_staff_only(course_key):
             return True
-        return summary_enabled(course_key)
+
+        if ff_is_summary_config_enabled(course_key):
+            return is_summary_enabled(course_key, unit_key)
+
+        if ff_summary_enabled(course_key):
+            return True
+
+        return False

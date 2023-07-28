@@ -72,6 +72,6 @@ def summary_staff_only(course_key):
 
 def summaries_configuration_enabled(course_key):
     """
-    Return whether the summaryhook.summaryhook_staff_only WaffleFlag is on.
+    Return whether the summaryhook.summaryhook_summaries_configuration WaffleFlag is on.
     """
     return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_SUMMARIES_CONFIGURATION, course_key)

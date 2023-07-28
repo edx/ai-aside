@@ -281,7 +281,7 @@ class TestSummaryHookAsideMissingTranscript(TestCase):
         xmodule_exceptions_mock.NotFoundError = FakeNotFoundError
 
         def error_get_transcript(child, lang=None, output_format='SRT',
-                                 youtube_id=None):  # pylint: disable=unused-argument
+                                 youtube_id=None):
             raise FakeNotFoundError()
 
         transcript_utils_mock = MagicMock()
