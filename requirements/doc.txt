@@ -31,6 +31,7 @@ certifi==2023.7.22
 cffi==1.15.1
     # via
     #   -r requirements/test.txt
+    #   cryptography
     #   pynacl
 charset-normalizer==3.2.0
     # via requests
@@ -45,6 +46,8 @@ coverage[toml]==7.2.7
     # via
     #   -r requirements/test.txt
     #   pytest-cov
+cryptography==41.0.2
+    # via secretstorage
 ddt==1.6.0
     # via -r requirements/test.txt
 django==3.2.20
@@ -103,6 +106,10 @@ iniconfig==2.0.0
     #   pytest
 jaraco-classes==3.3.0
     # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via
     #   -r requirements/test.txt
@@ -125,7 +132,7 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.0.0
     # via jaraco-classes
-newrelic==8.8.1
+newrelic==8.9.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -216,8 +223,10 @@ restructuredtext-lint==1.4.0
     # via doc8
 rfc3986==2.0.0
     # via twine
-rich==13.4.2
+rich==13.5.0
     # via twine
+secretstorage==3.3.3
+    # via keyring
 six==1.16.0
     # via
     #   -r requirements/test.txt

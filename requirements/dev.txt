@@ -130,7 +130,7 @@ mccabe==0.7.0
     # via
     #   -r requirements/quality.txt
     #   pylint
-newrelic==8.8.1
+newrelic==8.9.0
     # via
     #   -r requirements/quality.txt
     #   edx-django-utils
@@ -150,7 +150,7 @@ pbr==5.11.1
     #   stevedore
 pip-tools==7.1.0
     # via -r requirements/pip-tools.txt
-platformdirs==3.9.1
+platformdirs==3.10.0
     # via
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
@@ -173,7 +173,7 @@ py==1.11.0
     # via
     #   -r requirements/ci.txt
     #   tox
-pycodestyle==2.10.0
+pycodestyle==2.11.0
     # via -r requirements/quality.txt
 pycparser==2.21
     # via
