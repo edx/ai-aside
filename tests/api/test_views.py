@@ -109,21 +109,31 @@ class TestApiViews(APITestCase):
 
     def test_course_delete(self):
         course_id = course_keys[0]
+        unit_id = unit_keys[0]
 
         AIAsideCourseEnabled.objects.create(
             course_key=CourseKey.from_string(course_id),
             enabled=True,
         )
+        AIAsideUnitEnabled.objects.create(
+            course_key=CourseKey.from_string(course_id),
+            unit_key=UsageKey.from_string(unit_id),
+            enabled=True,
+        )
+
+        courses = AIAsideCourseEnabled.objects.filter(course_key=course_id)
+        units = AIAsideUnitEnabled.objects.filter(course_key=course_id)
+
+        self.assertEqual(courses.count(), 1)
+        self.assertEqual(units.count(), 1)
 
         api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
         response = self.client.delete(api_url)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['response']['success'], True)
-
-        res = AIAsideCourseEnabled.objects.filter(course_key=course_id)
-
-        self.assertEqual(res.count(), 0)
+        self.assertEqual(courses.count(), 0)
+        self.assertEqual(units.count(), 0)
 
     def test_course_delete_404(self):
         course_id = course_keys[1]
@@ -288,3 +298,24 @@ class TestApiViews(APITestCase):
         response = self.client.delete(api_url)
 
         self.assertEqual(response.status_code, 404)
+
+    def test_course_enabled_setter_enable_valid_and_reset(self):
+        course_id = course_keys[0]
+        unit_id = unit_keys[0]
+
+        units = AIAsideUnitEnabled.objects.filter(course_key=course_id)
+        AIAsideUnitEnabled.objects.create(
+            course_key=CourseKey.from_string(course_id),
+            unit_key=UsageKey.from_string(unit_id),
+            enabled=True,
+        )
+
+        self.assertEqual(units.count(), 1)
+
+        api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
+
+        self.client.post(api_url, {'enabled': True, 'reset': False}, format='json')
+        self.assertEqual(units.count(), 1)
+
+        self.client.post(api_url, {'enabled': False, 'reset': True}, format='json')
+        self.assertEqual(units.count(), 0)

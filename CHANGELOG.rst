@@ -14,6 +14,13 @@ Change Log
 Unreleased
 **********
 
+3.3.0 – 2023-08-16
+**********************************************
+
+Features
+=========
+* Add xpert summaries configuration by default for units
+
 3.2.0 – 2023-07-26
 **********************************************
 

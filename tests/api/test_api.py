@@ -12,7 +12,9 @@ from ai_aside.config_api.api import (
     delete_unit_settings,
     get_course_settings,
     get_unit_settings,
+    is_course_present,
     is_summary_enabled,
+    reset_course_unit_settings,
     set_course_settings,
     set_unit_settings,
 )
@@ -86,21 +88,46 @@ class TestApiMethods(TestCase):
 
     def test_course_delete(self):
         course_key = course_keys[0]
+        unit_key = unit_keys[0]
 
         AIAsideCourseEnabled.objects.create(
             course_key=course_key,
             enabled=True
         )
 
+        AIAsideUnitEnabled.objects.create(
+            course_key=course_key,
+            unit_key=unit_key,
+            enabled=True
+        )
+
         delete_course_settings(course_key)
 
-        res = AIAsideCourseEnabled.objects.filter(course_key=course_key)
+        courses = AIAsideCourseEnabled.objects.filter(course_key=course_key)
+        units = AIAsideUnitEnabled.objects.filter(course_key=course_key)
 
-        self.assertEqual(res.count(), 0)
+        self.assertEqual(courses.count(), 0)
+        self.assertEqual(units.count(), 0)
 
     def test_course_delete_not_found(self):
         with self.assertRaises(NotFoundError):
             delete_course_settings(course_keys[1])
+
+    def test_course_delete_not_found_reset_all_units(self):
+        course_key = course_keys[1]
+        unit_key = unit_keys[1]
+
+        AIAsideUnitEnabled.objects.create(
+            course_key=course_key,
+            unit_key=unit_key,
+        )
+
+        units = AIAsideUnitEnabled.objects.filter(course_key=course_key)
+
+        with self.assertRaises(NotFoundError):
+            self.assertEqual(units.count(), 1)
+            delete_course_settings(course_keys[1])
+            self.assertEqual(units.count(), 0)
 
     def test_set_unit_settings(self):
         course_key = course_keys[0]
@@ -285,3 +312,36 @@ class TestApiMethods(TestCase):
         self.assertFalse(is_summary_enabled(course_key_true, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
+
+    def test_reset_course_unit_settings(self):
+        course_key = course_keys[0]
+
+        AIAsideUnitEnabled.objects.create(
+            course_key=course_key,
+            unit_key=unit_keys[0],
+            enabled=True
+        )
+
+        AIAsideUnitEnabled.objects.create(
+            course_key=course_key,
+            unit_key=unit_keys[1],
+            enabled=False
+        )
+
+        units = AIAsideUnitEnabled.objects.filter(course_key=course_key)
+        self.assertEqual(units.count(), 2)
+
+        reset_course_unit_settings(course_key)
+        self.assertEqual(units.count(), 0)
+
+    def test_is_course_present(self):
+        course_key = course_keys[0]
+
+        self.assertFalse(is_course_present(course_key))
+
+        AIAsideCourseEnabled.objects.create(
+            course_key=course_key,
+            enabled=True,
+        )
+
+        self.assertTrue(is_course_present(course_key))
