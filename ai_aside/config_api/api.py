@@ -1,7 +1,7 @@
 """
 Implements an API for updating unit and course settings.
 """
-from ai_aside.config_api.internal import NotFoundError, _get_course, _get_unit
+from ai_aside.config_api.internal import NotFoundError, _get_course, _get_course_units, _get_unit
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
 from ai_aside.waffle import summaries_configuration_enabled
 
@@ -49,6 +49,7 @@ def delete_course_settings(course_key):
 
     Raises NotFoundError if the settings are not found.
     """
+    reset_course_unit_settings(course_key)
     record = _get_course(course_key)
     record.delete()
 
@@ -67,6 +68,13 @@ def get_unit_settings(course_key, unit_key):
     }
 
     return fields
+
+
+def reset_course_unit_settings(course_key):
+    """
+    Deletes the unit settings of a course.
+    """
+    return _get_course_units(course_key).delete()
 
 
 def set_unit_settings(course_key, unit_key, settings):
@@ -112,13 +120,24 @@ def is_summary_config_enabled(course_key):
     return summaries_configuration_enabled(course_key)
 
 
+def is_course_settings_present(course_key):
+    """
+    Exist a course for the given key?
+    """
+    try:
+        course = _get_course(course_key)
+        return course is not None
+    except NotFoundError:
+        return False
+
+
 def is_summary_enabled(course_key, unit_key=None):
     """
     Gets the enabled state of a course's unit.
     It considers both the state of a unit's override and a course defaults.
     """
 
-    # If the feature flag is disabled, always returns false.
+    # If the feature flag is disabled, always returns False.
     if not summaries_configuration_enabled(course_key):
         return False
 

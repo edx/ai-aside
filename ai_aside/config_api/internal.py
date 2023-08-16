@@ -31,3 +31,10 @@ def _get_unit(course_key, unit_key):
         raise NotFoundError from exc
 
     return record
+
+
+def _get_course_units(course_key):
+    "Private method that gets a unit based on a course_key"
+    return AIAsideUnitEnabled.objects.filter(
+        course_key=course_key,
+    )

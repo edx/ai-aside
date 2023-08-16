@@ -28,6 +28,7 @@ from ai_aside.config_api.api import (
     get_course_settings,
     get_unit_settings,
     is_summary_config_enabled,
+    reset_course_unit_settings,
     set_course_settings,
     set_unit_settings,
 )
@@ -80,12 +81,19 @@ class CourseEnabledAPIView(APIView):
         return APIResponse(success=True, data=settings)
 
     def post(self, request, course_id=None):
-        """Sets the enabled state for a course"""
+        """Update the course and reset if its necessary"""
 
+        # enabled: Updates the course enabled default state
         enabled = request.data.get('enabled')
 
+        # reset: If it is present, it will delete all unit settings, resetting them back to the default
+        reset = request.data.get('reset')
+
         try:
-            set_course_settings(CourseKey.from_string(course_id), {'enabled': enabled})
+            course_key = CourseKey.from_string(course_id)
+            set_course_settings(course_key, {'enabled': enabled})
+            if reset:
+                reset_course_unit_settings(course_key)
         except InvalidKeyError:
             data = {'message': 'Invalid Key'}
             return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
