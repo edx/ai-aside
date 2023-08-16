@@ -12,7 +12,7 @@ from ai_aside.config_api.api import (
     delete_unit_settings,
     get_course_settings,
     get_unit_settings,
-    is_course_present,
+    is_course_settings_present,
     is_summary_enabled,
     reset_course_unit_settings,
     set_course_settings,
@@ -334,14 +334,14 @@ class TestApiMethods(TestCase):
         reset_course_unit_settings(course_key)
         self.assertEqual(units.count(), 0)
 
-    def test_is_course_present(self):
+    def test_is_course_settings_present(self):
         course_key = course_keys[0]
 
-        self.assertFalse(is_course_present(course_key))
+        self.assertFalse(is_course_settings_present(course_key))
 
         AIAsideCourseEnabled.objects.create(
             course_key=course_key,
             enabled=True,
         )
 
-        self.assertTrue(is_course_present(course_key))
+        self.assertTrue(is_course_settings_present(course_key))

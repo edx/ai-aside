@@ -120,7 +120,7 @@ def is_summary_config_enabled(course_key):
     return summaries_configuration_enabled(course_key)
 
 
-def is_course_present(course_key):
+def is_course_settings_present(course_key):
     """
     Exist a course for the given key?
     """
