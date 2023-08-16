@@ -82,7 +82,11 @@ class CourseEnabledAPIView(APIView):
 
     def post(self, request, course_id=None):
         """Update the course and reset if its necessary"""
+
+        # enabled: Updates the course enabled default state
         enabled = request.data.get('enabled')
+
+        # reset: If it is present, it will delete all unit settings, resetting them back to the default
         reset = request.data.get('reset')
 
         try:
