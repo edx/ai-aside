@@ -33,7 +33,7 @@ SUMMARYHOOK_STAFF_ONLY = 'summaryhook_staff_only'
 SUMMARYHOOK_SUMMARIES_CONFIGURATION = 'summaryhook_summaries_configuration'
 
 
-def _is_get_summaryhook_waffle_flag_enabled(flag_name, course_key):
+def _is_summaryhook_waffle_flag_enabled(flag_name, course_key):
     """
     Import and return Waffle flag for enabling the summary hook.
     """
@@ -49,11 +49,11 @@ def summary_staff_only(course_key):
     """
     Return whether the summaryhook.summaryhook_staff_only WaffleFlag is on.
     """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_STAFF_ONLY, course_key)
+    return _is_summaryhook_waffle_flag_enabled(SUMMARYHOOK_STAFF_ONLY, course_key)
 
 
 def summaries_configuration_enabled(course_key):
     """
     Return whether the summaryhook.summaryhook_summaries_configuration WaffleFlag is on.
     """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_SUMMARIES_CONFIGURATION, course_key)
+    return _is_summaryhook_waffle_flag_enabled(SUMMARYHOOK_SUMMARIES_CONFIGURATION, course_key)
