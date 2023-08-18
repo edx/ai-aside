@@ -8,17 +8,6 @@ import at use time method taken from the LTI Xblock
 # Namespace
 WAFFLE_NAMESPACE = 'summaryhook'
 
-# .. toggle_name: summaryhook.enabled
-# .. toggle_implementation: CourseWaffleFlag
-# .. toggle_default: False
-# .. toggle_description: Enables OpenAI driven summary xblock aside
-# .. toggle_use_cases: temporary
-# .. toggle_creation_date: 2023-03-06
-# .. toggle_target_removal_date: 2023-12-06
-# .. toggle_tickets: ACADEMIC-15709 (2U)
-# .. toggle_warning: None.
-SUMMARYHOOK_ENABLED = 'summaryhook_enabled'
-
 
 # .. toggle_name: summaryhook.staff_only
 # .. toggle_implementation: CourseWaffleFlag
@@ -54,13 +43,6 @@ def _is_get_summaryhook_waffle_flag_enabled(flag_name, course_key):
         return CourseWaffleFlag(f'{WAFFLE_NAMESPACE}.{flag_name}', __name__).is_enabled(course_key)
     except ImportError:
         return False
-
-
-def summary_enabled(course_key):
-    """
-    Return whether the summaryhook.summaryhook_enabled WaffleFlag is on.
-    """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_ENABLED, course_key)
 
 
 def summary_staff_only(course_key):

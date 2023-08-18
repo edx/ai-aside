@@ -14,6 +14,11 @@ Change Log
 Unreleased
 **********
 
+3.3.0 – 2023-08-21
+**********************************************
+
+* Remove no longer needed first waffle flag summaryhook_enabled
+
 3.3.0 – 2023-08-16
 **********************************************
 
