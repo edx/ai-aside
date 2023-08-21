@@ -8,17 +8,6 @@ import at use time method taken from the LTI Xblock
 # Namespace
 WAFFLE_NAMESPACE = 'summaryhook'
 
-# .. toggle_name: summaryhook.enabled
-# .. toggle_implementation: CourseWaffleFlag
-# .. toggle_default: False
-# .. toggle_description: Enables OpenAI driven summary xblock aside
-# .. toggle_use_cases: temporary
-# .. toggle_creation_date: 2023-03-06
-# .. toggle_target_removal_date: 2023-12-06
-# .. toggle_tickets: ACADEMIC-15709 (2U)
-# .. toggle_warning: None.
-SUMMARYHOOK_ENABLED = 'summaryhook_enabled'
-
 
 # .. toggle_name: summaryhook.staff_only
 # .. toggle_implementation: CourseWaffleFlag
@@ -44,7 +33,7 @@ SUMMARYHOOK_STAFF_ONLY = 'summaryhook_staff_only'
 SUMMARYHOOK_SUMMARIES_CONFIGURATION = 'summaryhook_summaries_configuration'
 
 
-def _is_get_summaryhook_waffle_flag_enabled(flag_name, course_key):
+def _is_summaryhook_waffle_flag_enabled(flag_name, course_key):
     """
     Import and return Waffle flag for enabling the summary hook.
     """
@@ -56,22 +45,15 @@ def _is_get_summaryhook_waffle_flag_enabled(flag_name, course_key):
         return False
 
 
-def summary_enabled(course_key):
-    """
-    Return whether the summaryhook.summaryhook_enabled WaffleFlag is on.
-    """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_ENABLED, course_key)
-
-
 def summary_staff_only(course_key):
     """
     Return whether the summaryhook.summaryhook_staff_only WaffleFlag is on.
     """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_STAFF_ONLY, course_key)
+    return _is_summaryhook_waffle_flag_enabled(SUMMARYHOOK_STAFF_ONLY, course_key)
 
 
 def summaries_configuration_enabled(course_key):
     """
     Return whether the summaryhook.summaryhook_summaries_configuration WaffleFlag is on.
     """
-    return _is_get_summaryhook_waffle_flag_enabled(SUMMARYHOOK_SUMMARIES_CONFIGURATION, course_key)
+    return _is_summaryhook_waffle_flag_enabled(SUMMARYHOOK_SUMMARIES_CONFIGURATION, course_key)

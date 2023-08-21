@@ -13,7 +13,6 @@ from ai_aside.config_api.api import is_summary_enabled
 from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summaries_configuration_enabled as ff_is_summary_config_enabled
-from ai_aside.waffle import summary_enabled as ff_summary_enabled
 from ai_aside.waffle import summary_staff_only as ff_summary_staff_only
 
 log = logging.getLogger(__name__)
@@ -283,8 +282,5 @@ class SummaryHookAside(XBlockAside):
 
         if ff_is_summary_config_enabled(course_key):
             return is_summary_enabled(course_key, unit_key)
-
-        if ff_summary_enabled(course_key):
-            return True
 
         return False
