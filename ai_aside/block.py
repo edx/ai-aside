@@ -32,6 +32,7 @@ summary_fragment = """
       data-course-id="{{data_course_id}}"
       data-content-id="{{data_content_id}}"
       data-handler-url="{{data_handler_url}}"
+      data-last-updated="{{data_last_updated}}"
     >
     </div>
   </div>
@@ -42,7 +43,7 @@ summary_fragment = """
 
 
 def _format_date(date):
-    return date.strftime('%Y-%m-%d %H:%M:%S') if isinstance(date, datetime) else None
+    return date.isoformat() if isinstance(date, datetime) else None
 
 
 def _staff_user(block):
@@ -132,6 +133,46 @@ def _check_summarizable(block):
     return False
 
 
+def _render_hook_fragment(handler_url, block, summary_items):
+    """
+    Create hook Fragment from block and summarized children.
+
+    Gathers data for the summary hook HTML, passes it into _render_summary
+    to get the HTML and packages that into a Fragment.
+    """
+    last_published = getattr(block, 'published_on', None)
+    last_edited = getattr(block, 'edited_on', None)
+    for item in summary_items:
+        published = item['published_on']
+        edited = item['edited_on']
+        if published and published > last_published:
+            last_published = published
+        if edited and edited > last_edited:
+            last_edited = edited
+
+    # we only need to know when the last time was that anything happened
+    last_updated = last_published
+    if last_edited > last_published:
+        last_updated = last_edited
+
+    usage_id = block.scope_ids.usage_id
+
+    fragment = Fragment('')
+    fragment.add_content(
+        _render_summary(
+            {
+                'data_url_api': settings.SUMMARY_HOOK_HOST,
+                'data_course_id': usage_id.course_key,
+                'data_content_id': usage_id,
+                'data_handler_url': handler_url,
+                'data_last_updated': _format_date(last_updated),
+                'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
+            }
+        )
+    )
+    return fragment
+
+
 class SummaryHookAside(XBlockAside):
     """
     XBlock aside that injects AI summary javascript.
@@ -155,7 +196,7 @@ class SummaryHookAside(XBlockAside):
             return Response(status=404)
 
         published_on = getattr(block, 'published_on', None)
-        edited_on = getattr(block, 'published_on', None)
+        edited_on = getattr(block, 'edited_on', None)
 
         data = []
 
@@ -205,31 +246,15 @@ class SummaryHookAside(XBlockAside):
 
         This function can throw exceptions.
         """
-        fragment = Fragment('')
+        length, items = _parse_children_contents(block)
 
-        # Check if there is content that worths summarizing
-        length, _ = _parse_children_contents(block)
         if length < settings.SUMMARY_HOOK_MIN_SIZE:
-            return fragment
+            return Fragment('')
 
         usage_id = block.scope_ids.usage_id
-
         log.info(f'Summary hook injecting into {usage_id}')
 
-        handler_url = self._summary_handler_url()
-
-        fragment.add_content(
-            _render_summary(
-                {
-                    'data_url_api': settings.SUMMARY_HOOK_HOST,
-                    'data_course_id': usage_id.course_key,
-                    'data_content_id': usage_id,
-                    'data_handler_url': handler_url,
-                    'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
-                }
-            )
-        )
-        return fragment
+        return _render_hook_fragment(self._summary_handler_url(), block, items)
 
     def _summary_handler_url(self):
         """
