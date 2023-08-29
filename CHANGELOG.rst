@@ -14,6 +14,13 @@ Change Log
 Unreleased
 **********
 
+3.4.0 – 2023-08-30
+**********************************************
+
+* Include last updated timestamp in summary hook HTML, derived from the blocks.
+* Also somewhat reformats timestamps in the handler return to conform to ISO standard.
+
+
 3.3.1 – 2023-08-21
 **********************************************
 

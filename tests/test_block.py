@@ -5,10 +5,19 @@ from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
 from django.test import TestCase, override_settings
+from opaque_keys.edx.keys import UsageKey
 
-from ai_aside.block import _check_summarizable, _extract_child_contents, _format_date, _parse_children_contents
+from ai_aside.block import (
+    _check_summarizable,
+    _extract_child_contents,
+    _format_date,
+    _parse_children_contents,
+    _render_hook_fragment,
+)
 
 fake_transcript = 'This is the text version from the transcript'
+date1 = datetime(2023, 1, 2, 3, 4, 5)
+date2 = datetime(2023, 6, 7, 8, 9, 10)
 
 
 def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):  # pylint: disable=unused-argument
@@ -39,12 +48,19 @@ class FakeBlock:
     "Fake block for testing, returns given children"
     def __init__(self, children):
         self.children = children
+        self.scope_ids = lambda: None
+        self.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
+        self.edited_on = date1
+        self.published_on = date1
 
     def get_children(self):
         return self.children
 
 
-@override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
+@override_settings(SUMMARY_HOOK_MIN_SIZE=40,
+                   SUMMARY_HOOK_HOST='http://hookhost',
+                   SUMMARY_HOOK_JS_PATH='/jspath',
+                   HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
 class TestSummaryHookAside(TestCase):
     """Summary hook aside tests"""
     def setUp(self):
@@ -62,9 +78,8 @@ class TestSummaryHookAside(TestCase):
         patch.dict('sys.modules', modules).start()
 
     def test_format_date(self):
-        date = datetime(2023, 5, 1, 12, 0, 0)
-        formatted_date = _format_date(date)
-        self.assertEqual(formatted_date, '2023-05-01 12:00:00')
+        formatted_date = _format_date(date1)
+        self.assertEqual(formatted_date, '2023-01-02T03:04:05')
 
     def test_format_date_with_invalid_input(self):
         invalid_date = '2023-05-01'
@@ -268,6 +283,39 @@ class TestSummaryHookAside(TestCase):
 
         self.assertEqual(length, 0)
         self.assertEqual(items, [])
+
+    def test_render_hook_fragment(self):
+        block = FakeBlock([])
+        items = [{
+            'published_on': date1,
+            'edited_on': date1,
+        }, {
+            'published_on': date2,
+            'edited_on': date1,
+        }]
+        expected = '''
+        <div>&nbsp;</div>
+          <div class="summary-hook">
+            <div summary-launch>
+                <div id="launch-summary-button"
+                data-url-api="http://hookhost"
+                data-course-id="course-v1:edX+A+B"
+                data-content-id="block-v1:edX+A+B+type@vertical+block@verticalD"
+                data-handler-url="http://handler.url"
+                data-last-updated="2023-06-07T08:09:10"
+                >
+                </div>
+            </div>
+            <div id="ai-spot-root"></div>
+            <script type="text/javascript" src="http://hookhost/jspath" defer="defer"></script>
+        </div>
+        '''
+        fragment = _render_hook_fragment('http://handler.url', block, items)
+        self.assertEqual(
+            # join and split to ignore whitespace differences
+            "".join(fragment.body_html()).split(),
+            "".join(expected).split()
+        )
 
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
