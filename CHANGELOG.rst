@@ -14,6 +14,12 @@ Change Log
 Unreleased
 **********
 
+3.5.0 – 2023-09-04
+**********************************************
+
+* Add HasStudioWriteAccess permissions checks before each request.
+
+
 3.4.0 – 2023-08-30
 **********************************************
 

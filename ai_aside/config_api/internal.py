@@ -1,11 +1,8 @@
 """
 Internal methods for the API.
 """
+from ai_aside.config_api.exceptions import AiAsideNotFoundException
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
-
-
-class NotFoundError(Exception):
-    "Raised when the course/unit is not found in the database"
 
 
 def _get_course(course_key):
@@ -14,8 +11,8 @@ def _get_course(course_key):
         record = AIAsideCourseEnabled.objects.get(
             course_key=course_key,
         )
-    except AIAsideCourseEnabled.DoesNotExist as exc:
-        raise NotFoundError from exc
+    except AIAsideCourseEnabled.DoesNotExist as error:
+        raise AiAsideNotFoundException from error
 
     return record
 
@@ -27,8 +24,8 @@ def _get_unit(course_key, unit_key):
             course_key=course_key,
             unit_key=unit_key,
         )
-    except AIAsideUnitEnabled.DoesNotExist as exc:
-        raise NotFoundError from exc
+    except AIAsideUnitEnabled.DoesNotExist as error:
+        raise AiAsideNotFoundException from error
 
     return record
 

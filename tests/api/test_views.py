@@ -1,7 +1,7 @@
 """
 Tests for the API
 """
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import ddt
 from django.urls import reverse
@@ -20,10 +20,20 @@ unit_keys = [
     'block-v1:edX+DemoX+Demo_Course+type@vertical+block@vertical_321ac313f2de',
 ]
 
+can_change_summaries_settings = Mock()
+
 
 @ddt.ddt
-class TestApiViews(APITestCase):
-    """API Endpoint View tests"""
+class TestApiViewsWithPermissions(APITestCase):
+    """API Endpoint View tests with permissions"""
+    def setUp(self):
+        can_change_summaries_settings.return_value = True
+        self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
+                                 can_change_summaries_settings)
+        self.access_mock.start()
+
+    def tearDown(self):
+        self.access_mock.stop()
 
     @ddt.data(True, False)
     @patch('ai_aside.config_api.api.summaries_configuration_enabled')
@@ -211,9 +221,9 @@ class TestApiViews(APITestCase):
             'unit_id': unit_id,
         })
         response = self.client.post(api_url, {'enabled': True}, format='json')
-
+        message = response.data['response']['message']
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['response']['message'], 'Invalid Key')
+        self.assertEqual(message, 'this:is:not_a-valid~key#either! is not a valid UsageKey')
 
     def test_unit_enabled_getter_valid(self):
         course_id = course_keys[0]
@@ -244,9 +254,9 @@ class TestApiViews(APITestCase):
             'unit_id': unit_id,
         })
         response = self.client.get(api_url)
-
+        message = response.data['response']['message']
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['response']['message'], 'Invalid Key')
+        self.assertEqual(message, 'this:is:not_a-valid~key#either! is not a valid UsageKey')
 
     def test_unit_enabled_getter_404(self):
         course_id = course_keys[1]
@@ -319,3 +329,83 @@ class TestApiViews(APITestCase):
 
         self.client.post(api_url, {'enabled': False, 'reset': True}, format='json')
         self.assertEqual(units.count(), 0)
+
+
+class TestApiViewsWithoutPermissions(APITestCase):
+    """API Endpoint View tests without permissions"""
+    def setUp(self):
+        can_change_summaries_settings.return_value = False
+        self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
+                                 can_change_summaries_settings)
+        self.access_mock.start()
+
+    def tearDown(self):
+        self.access_mock.stop()
+
+    def test_course_configurable_403(self):
+        course_id = course_keys[0]
+
+        api_url = reverse('api-course-configurable', kwargs={'course_id': course_id})
+        response = self.client.get(api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_course_settings_403(self):
+        course_id = course_keys[0]
+
+        api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
+        response = self.client.get(api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_post_course_settings_403(self):
+        course_id = course_keys[0]
+
+        api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
+        response = self.client.post(api_url, {'enabled': 'true'}, format='json')
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_course_settings_403(self):
+        course_id = course_keys[0]
+
+        api_url = reverse('api-course-settings', kwargs={'course_id': course_id})
+        response = self.client.delete(api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_get_unit_settings_403(self):
+        course_id = course_keys[0]
+        unit_id = unit_keys[0]
+
+        api_url = reverse('api-unit-settings', kwargs={
+            'course_id': course_id,
+            'unit_id': unit_id,
+        })
+        response = self.client.get(api_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_post_unit_settings_403(self):
+        course_id = course_keys[0]
+        unit_id = unit_keys[0]
+
+        api_url = reverse('api-unit-settings', kwargs={
+            'course_id': course_id,
+            'unit_id': unit_id,
+        })
+        response = self.client.post(api_url, {'enabled': True}, format='json')
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_unit_settings_403(self):
+        course_id = course_keys[0]
+        unit_id = unit_keys[0]
+
+        api_url = reverse('api-unit-settings', kwargs={
+            'course_id': course_id,
+            'unit_id': unit_id,
+        })
+        response = self.client.delete(api_url)
+
+        self.assertEqual(response.status_code, 403)
