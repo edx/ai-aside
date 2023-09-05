@@ -17,6 +17,9 @@ Unreleased
 3.5.0 – 2023-09-04
 **********************************************
 
+* Add edx-drf-extensions lib.
+* Add JwtAuthentication checks before each request.
+* Add SessionAuthentication checks before each request.
 * Add HasStudioWriteAccess permissions checks before each request.
 
 
