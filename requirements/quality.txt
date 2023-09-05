@@ -16,11 +16,20 @@ astroid==2.15.6
     # via
     #   pylint
     #   pylint-celery
+certifi==2023.7.22
+    # via
+    #   -r requirements/test.txt
+    #   requests
 cffi==1.15.1
     # via
     #   -r requirements/test.txt
+    #   cryptography
     #   pynacl
-click==8.1.6
+charset-normalizer==3.2.0
+    # via
+    #   -r requirements/test.txt
+    #   requests
+click==8.1.7
     # via
     #   -r requirements/test.txt
     #   click-log
@@ -33,22 +42,28 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
-coverage[toml]==7.2.7
+coverage[toml]==7.3.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
+cryptography==41.0.3
+    # via
+    #   -r requirements/test.txt
+    #   pyjwt
 ddt==1.6.0
     # via -r requirements/test.txt
 dill==0.3.7
     # via pylint
-django==3.2.20
+django==3.2.21
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   django-crum
     #   django-waffle
     #   djangorestframework
+    #   drf-jwt
     #   edx-django-utils
+    #   edx-drf-extensions
 django-crum==0.7.9
     # via
     #   -r requirements/test.txt
@@ -57,15 +72,29 @@ django-waffle==4.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+    #   edx-drf-extensions
 djangorestframework==3.14.0
-    # via -r requirements/test.txt
-edx-django-utils==5.6.0
+    # via
+    #   -r requirements/test.txt
+    #   drf-jwt
+    #   edx-drf-extensions
+drf-jwt==1.19.2
+    # via
+    #   -r requirements/test.txt
+    #   edx-drf-extensions
+edx-django-utils==5.7.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-drf-extensions
+edx-drf-extensions==8.9.2
     # via -r requirements/test.txt
 edx-lint==5.3.4
     # via -r requirements/quality.in
-edx-opaque-keys==2.3.0
-    # via -r requirements/test.txt
-exceptiongroup==1.1.2
+edx-opaque-keys==2.5.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-drf-extensions
+exceptiongroup==1.1.3
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -73,6 +102,10 @@ fs==2.4.16
     # via
     #   -r requirements/test.txt
     #   xblock
+idna==3.4
+    # via
+    #   -r requirements/test.txt
+    #   requests
 iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
@@ -98,7 +131,7 @@ markupsafe==2.1.3
     #   xblock
 mccabe==0.7.0
     # via pylint
-newrelic==8.8.1
+newrelic==9.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -110,9 +143,9 @@ pbr==5.11.1
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==3.9.1
+platformdirs==3.10.0
     # via pylint
-pluggy==1.2.0
+pluggy==1.3.0
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -120,7 +153,7 @@ psutil==5.9.5
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pycodestyle==2.10.0
+pycodestyle==2.11.0
     # via -r requirements/quality.in
 pycparser==2.21
     # via
@@ -128,6 +161,11 @@ pycparser==2.21
     #   cffi
 pydocstyle==6.3.0
     # via -r requirements/quality.in
+pyjwt[crypto]==2.8.0
+    # via
+    #   -r requirements/test.txt
+    #   drf-jwt
+    #   edx-drf-extensions
 pylint==2.17.5
     # via
     #   edx-lint
@@ -150,7 +188,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pytest==7.4.0
+pytest==7.4.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -162,12 +200,13 @@ pytest-django==4.5.2
 python-dateutil==2.8.2
     # via
     #   -r requirements/test.txt
+    #   edx-drf-extensions
     #   xblock
 python-slugify==8.0.1
     # via
     #   -r requirements/test.txt
     #   code-annotations
-pytz==2023.3
+pytz==2023.3.post1
     # via
     #   -r requirements/test.txt
     #   django
@@ -178,9 +217,18 @@ pyyaml==6.0.1
     #   -r requirements/test.txt
     #   code-annotations
     #   xblock
+requests==2.31.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-drf-extensions
+semantic-version==2.10.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-drf-extensions
 six==1.16.0
     # via
     #   -r requirements/test.txt
+    #   edx-drf-extensions
     #   edx-lint
     #   fs
     #   python-dateutil
@@ -213,8 +261,13 @@ typing-extensions==4.7.1
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
+    #   edx-opaque-keys
     #   pylint
-web-fragments==2.0.0
+urllib3==2.0.4
+    # via
+    #   -r requirements/test.txt
+    #   requests
+web-fragments==2.1.0
     # via
     #   -r requirements/test.txt
     #   xblock
@@ -224,7 +277,7 @@ webob==1.8.7
     #   xblock
 wrapt==1.15.0
     # via astroid
-xblock==1.6.2
+xblock==1.7.0
     # via -r requirements/test.txt
 
 # The following packages are considered to be unsafe in a requirements file:

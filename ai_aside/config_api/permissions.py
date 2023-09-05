@@ -14,6 +14,13 @@ class HasStudioWriteAccess(BasePermission):
         """
         Check permissions for this class.
         """
+
+        if not request.user.is_authenticated:
+            return False
+
+        if not request.user.is_active:
+            return False
+
         course_key_string = view.kwargs.get('course_id')
         course_key = validate_course_key(course_key_string)
 

@@ -3,6 +3,8 @@ Config API Utilities
 """
 import logging
 
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
+from edx_rest_framework_extensions.auth.session.authentication import SessionAuthentication
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -37,6 +39,7 @@ class AiAsideAPIView(APIView):
     Base API View with authentication and permissions.
     """
 
+    authentication_classes = (JwtAuthentication, SessionAuthentication,)
     permission_classes = (HasStudioWriteAccess,)
 
     def handle_exception(self, exc):

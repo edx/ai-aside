@@ -6,9 +6,9 @@ from unittest.mock import Mock, patch
 import ddt
 from django.urls import reverse
 from opaque_keys.edx.keys import CourseKey, UsageKey
-from rest_framework.test import APITestCase
 
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
+from test_utils import AIAsideAPITestCase
 
 course_keys = [
     'course-v1:edX+DemoX+Demo_Course',
@@ -24,15 +24,17 @@ can_change_summaries_settings = Mock()
 
 
 @ddt.ddt
-class TestApiViewsWithPermissions(APITestCase):
+class TestApiViewsWithPermissions(AIAsideAPITestCase):
     """API Endpoint View tests with permissions"""
     def setUp(self):
+        super().setUp()
         can_change_summaries_settings.return_value = True
         self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
                                  can_change_summaries_settings)
         self.access_mock.start()
 
     def tearDown(self):
+        super().tearDown()
         self.access_mock.stop()
 
     @ddt.data(True, False)
@@ -331,15 +333,17 @@ class TestApiViewsWithPermissions(APITestCase):
         self.assertEqual(units.count(), 0)
 
 
-class TestApiViewsWithoutPermissions(APITestCase):
+class TestApiViewsWithoutPermissions(AIAsideAPITestCase):
     """API Endpoint View tests without permissions"""
     def setUp(self):
+        super().setUp()
         can_change_summaries_settings.return_value = False
         self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
                                  can_change_summaries_settings)
         self.access_mock.start()
 
     def tearDown(self):
+        super().tearDown()
         self.access_mock.stop()
 
     def test_course_configurable_403(self):
