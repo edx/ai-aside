@@ -26,3 +26,10 @@ def get_block(usage_key):
     # pylint: disable=import-error, import-outside-toplevel
     from xmodule.modulestore.django import modulestore
     return modulestore().get_item(usage_key)
+
+
+def can_change_summaries_settings(user, course_key):
+    """Check if the user can change the summaries settings by checking for studio write access."""
+    # pylint: disable=import-error, import-outside-toplevel
+    from common.djangoapps.student.auth import has_studio_write_access
+    return has_studio_write_access(user, course_key)

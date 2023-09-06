@@ -15,14 +15,7 @@ Delete:
 
 Both GET and DELETE methods respond with a 404 if the setting cannot be found.
 """
-from opaque_keys import InvalidKeyError
-from opaque_keys.edx.keys import CourseKey, UsageKey
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
 from ai_aside.config_api.api import (
-    NotFoundError,
     delete_course_settings,
     delete_unit_settings,
     get_course_settings,
@@ -32,52 +25,34 @@ from ai_aside.config_api.api import (
     set_course_settings,
     set_unit_settings,
 )
+from ai_aside.config_api.exceptions import AiAsideException, AiAsideNotFoundException
+from ai_aside.config_api.validators import validate_course_key, validate_unit_key
+from ai_aside.config_api.view_utils import AiAsideAPIView, APIResponse
 
 
-class APIResponse(Response):
-    """API Response"""
-    def __init__(self, data=None, http_status=None, content_type=None, success=False):
-        _status = http_status or status.HTTP_200_OK
-        data = data or {}
-        reply = {'response': {'success': success}}
-        reply['response'].update(data)
-        super().__init__(data=reply, status=_status, content_type=content_type)
-
-
-class CourseSummaryConfigEnabledAPIView(APIView):
+class CourseSummaryConfigEnabledAPIView(AiAsideAPIView):
     """
     Simple GET endpoint to expose whether the course may use summary config.
     """
-
     def get(self, request, course_id=None):
         """Expose whether the course may use summary config"""
         if course_id is None:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
+            raise AiAsideNotFoundException
 
-        try:
-            enabled = is_summary_config_enabled(CourseKey.from_string(course_id))
-            return APIResponse(success=True, data={'enabled': enabled})
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
+        course_key = validate_course_key(course_id)
+        enabled = is_summary_config_enabled(course_key)
+        return APIResponse(success=True, data={'enabled': enabled})
 
 
-class CourseEnabledAPIView(APIView):
+class CourseEnabledAPIView(AiAsideAPIView):
     """Handlers for course level settings"""
-
     def get(self, request, course_id=None):
         """Gets the enabled state for a course"""
         if course_id is None:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
+            raise AiAsideNotFoundException
 
-        try:
-            settings = get_course_settings(CourseKey.from_string(course_id))
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except NotFoundError:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
-
+        course_key = validate_course_key(course_id)
+        settings = get_course_settings(course_key)
         return APIResponse(success=True, data=settings)
 
     def post(self, request, course_id=None):
@@ -90,16 +65,12 @@ class CourseEnabledAPIView(APIView):
         reset = request.data.get('reset')
 
         try:
-            course_key = CourseKey.from_string(course_id)
+            course_key = validate_course_key(course_id)
             set_course_settings(course_key, {'enabled': enabled})
             if reset:
                 reset_course_unit_settings(course_key)
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except TypeError:
-            data = {'message': 'Invalid parameters'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
+        except TypeError as error:
+            raise AiAsideException('Invalid parameters') from error
 
         return APIResponse(success=True)
 
@@ -107,38 +78,23 @@ class CourseEnabledAPIView(APIView):
         """Deletes the settings for a module"""
 
         if course_id is None:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
+            raise AiAsideNotFoundException
 
-        try:
-            delete_course_settings(CourseKey.from_string(course_id))
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except NotFoundError:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
-
+        course_key = validate_course_key(course_id)
+        delete_course_settings(course_key)
         return APIResponse(success=True)
 
 
-class UnitEnabledAPIView(APIView):
+class UnitEnabledAPIView(AiAsideAPIView):
     """Handlers for module level settings"""
-
     def get(self, request, course_id=None, unit_id=None):
         """Gets the enabled state for a unit"""
         if course_id is None or unit_id is None:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
+            raise AiAsideNotFoundException
 
-        try:
-            settings = get_unit_settings(
-                CourseKey.from_string(course_id),
-                UsageKey.from_string(unit_id),
-            )
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except NotFoundError:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
-
+        course_key = validate_course_key(course_id)
+        unit_key = validate_unit_key(unit_id)
+        settings = get_unit_settings(course_key, unit_key)
         return APIResponse(success=True, data=settings)
 
     def post(self, request, course_id=None, unit_id=None):
@@ -147,16 +103,11 @@ class UnitEnabledAPIView(APIView):
         enabled = request.data.get('enabled')
 
         try:
-            set_unit_settings(
-                CourseKey.from_string(course_id),
-                UsageKey.from_string(unit_id),
-                {'enabled': enabled})
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except TypeError:
-            data = {'message': 'Invalid parameters'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
+            course_key = validate_course_key(course_id)
+            unit_key = validate_unit_key(unit_id)
+            set_unit_settings(course_key, unit_key, {'enabled': enabled})
+        except TypeError as error:
+            raise AiAsideException('Invalid parameters') from error
 
         return APIResponse(success=True)
 
@@ -164,17 +115,9 @@ class UnitEnabledAPIView(APIView):
         """Deletes the settings for a unit"""
 
         if course_id is None or unit_id is None:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
+            raise AiAsideNotFoundException
 
-        try:
-            delete_unit_settings(
-                CourseKey.from_string(course_id),
-                UsageKey.from_string(unit_id),
-            )
-        except InvalidKeyError:
-            data = {'message': 'Invalid Key'}
-            return APIResponse(http_status=status.HTTP_400_BAD_REQUEST, data=data)
-        except NotFoundError:
-            return APIResponse(http_status=status.HTTP_404_NOT_FOUND)
-
+        course_key = validate_course_key(course_id)
+        unit_key = validate_unit_key(unit_id)
+        delete_unit_settings(course_key, unit_key,)
         return APIResponse(success=True)

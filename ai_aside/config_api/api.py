@@ -1,7 +1,8 @@
 """
 Implements an API for updating unit and course settings.
 """
-from ai_aside.config_api.internal import NotFoundError, _get_course, _get_course_units, _get_unit
+from ai_aside.config_api.exceptions import AiAsideNotFoundException
+from ai_aside.config_api.internal import _get_course, _get_course_units, _get_unit
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
 from ai_aside.waffle import summaries_configuration_enabled
 
@@ -28,7 +29,7 @@ def set_course_settings(course_key, settings):
     Expects: settings to be a dictionary of the form:
         `{'enabled': bool}`
 
-    Raises NotFoundError if the settings are not found.
+    Raises AiAsideNotFoundException if the settings are not found.
     """
     enabled = settings['enabled']
 
@@ -47,7 +48,7 @@ def delete_course_settings(course_key):
     """
     Deletes the settings of a course.
 
-    Raises NotFoundError if the settings are not found.
+    Raises AiAsideNotFoundException if the settings are not found.
     """
     reset_course_unit_settings(course_key)
     record = _get_course(course_key)
@@ -84,7 +85,7 @@ def set_unit_settings(course_key, unit_key, settings):
     Expects: settings as a dictionary of the form:
         `{'enabled': bool}`
 
-    Raises NotFoundError if the settings are not found.
+    Raises AiAsideNotFoundException if the settings are not found.
     """
     enabled = settings['enabled']
 
@@ -104,7 +105,7 @@ def delete_unit_settings(course_key, unit_key):
     """
     Deletes the settings of a unit.
 
-    Raises NotFoundError if the settings are not found.
+    Raises AiAsideNotFoundException if the settings are not found.
     """
     record = _get_unit(course_key, unit_key)
     record.delete()
@@ -127,7 +128,7 @@ def is_course_settings_present(course_key):
     try:
         course = _get_course(course_key)
         return course is not None
-    except NotFoundError:
+    except AiAsideNotFoundException:
         return False
 
 
@@ -147,12 +148,12 @@ def is_summary_enabled(course_key, unit_key=None):
 
             if unit is not None:
                 return unit.enabled
-        except NotFoundError:
+        except AiAsideNotFoundException:
             pass
 
     try:
         course = _get_course(course_key)
-    except NotFoundError:
+    except AiAsideNotFoundException:
         return False
 
     if course is not None:

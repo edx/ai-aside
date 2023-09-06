@@ -7,7 +7,6 @@ from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 from ai_aside.config_api.api import (
-    NotFoundError,
     delete_course_settings,
     delete_unit_settings,
     get_course_settings,
@@ -18,6 +17,7 @@ from ai_aside.config_api.api import (
     set_course_settings,
     set_unit_settings,
 )
+from ai_aside.config_api.exceptions import AiAsideNotFoundException
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
 
 course_keys = [
@@ -83,7 +83,7 @@ class TestApiMethods(TestCase):
         self.assertTrue(settings['enabled'])
 
     def test_get_course_settings_not_found(self):
-        with self.assertRaises(NotFoundError):
+        with self.assertRaises(AiAsideNotFoundException):
             get_course_settings(course_keys[1])
 
     def test_course_delete(self):
@@ -110,7 +110,7 @@ class TestApiMethods(TestCase):
         self.assertEqual(units.count(), 0)
 
     def test_course_delete_not_found(self):
-        with self.assertRaises(NotFoundError):
+        with self.assertRaises(AiAsideNotFoundException):
             delete_course_settings(course_keys[1])
 
     def test_course_delete_not_found_reset_all_units(self):
@@ -124,7 +124,7 @@ class TestApiMethods(TestCase):
 
         units = AIAsideUnitEnabled.objects.filter(course_key=course_key)
 
-        with self.assertRaises(NotFoundError):
+        with self.assertRaises(AiAsideNotFoundException):
             self.assertEqual(units.count(), 1)
             delete_course_settings(course_keys[1])
             self.assertEqual(units.count(), 0)
@@ -195,7 +195,7 @@ class TestApiMethods(TestCase):
         course_key = course_keys[1]
         unit_key = unit_keys[1]
 
-        with self.assertRaises(NotFoundError):
+        with self.assertRaises(AiAsideNotFoundException):
             get_unit_settings(course_key, unit_key)
 
     def test_unit_delete(self):
@@ -222,7 +222,7 @@ class TestApiMethods(TestCase):
         course_key = course_keys[1]
         unit_key = unit_keys[1]
 
-        with self.assertRaises(NotFoundError):
+        with self.assertRaises(AiAsideNotFoundException):
             delete_unit_settings(course_key, unit_key)
 
     @patch('ai_aside.config_api.api.summaries_configuration_enabled')

@@ -6,3 +6,4 @@ edx_django_utils
 xblock
 edx-opaque-keys
 djangorestframework
+edx-drf-extensions
