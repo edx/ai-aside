@@ -22,9 +22,7 @@ babel==2.12.1
     #   sphinx
 beautifulsoup4==4.12.2
     # via pydata-sphinx-theme
-bleach==6.0.0
-    # via readme-renderer
-build==1.0.0
+build==1.0.3
     # via -r requirements/doc.in
 certifi==2023.7.22
     # via
@@ -46,7 +44,7 @@ click==8.1.7
     #   edx-django-utils
 code-annotations==1.5.0
     # via -r requirements/test.txt
-coverage[toml]==7.3.0
+coverage[toml]==7.3.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -54,6 +52,7 @@ cryptography==41.0.3
     # via
     #   -r requirements/test.txt
     #   pyjwt
+    #   secretstorage
 ddt==1.6.0
     # via -r requirements/test.txt
 django==3.2.21
@@ -131,6 +130,10 @@ iniconfig==2.0.0
     #   pytest
 jaraco-classes==3.3.0
     # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via
     #   -r requirements/test.txt
@@ -157,6 +160,8 @@ newrelic==9.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+nh3==0.2.14
+    # via readme-renderer
 packaging==23.1
     # via
     #   -r requirements/test.txt
@@ -207,7 +212,7 @@ pynacl==1.5.0
     #   edx-django-utils
 pyproject-hooks==1.0.0
     # via build
-pytest==7.4.1
+pytest==7.4.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -237,7 +242,7 @@ pyyaml==6.0.1
     #   -r requirements/test.txt
     #   code-annotations
     #   xblock
-readme-renderer==41.0
+readme-renderer==42.0
     # via twine
 requests==2.31.0
     # via
@@ -254,6 +259,8 @@ rfc3986==2.0.0
     # via twine
 rich==13.5.2
     # via twine
+secretstorage==3.3.3
+    # via keyring
 semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
@@ -261,7 +268,6 @@ semantic-version==2.10.0
 six==1.16.0
     # via
     #   -r requirements/test.txt
-    #   bleach
     #   edx-drf-extensions
     #   fs
     #   python-dateutil
@@ -329,8 +335,6 @@ web-fragments==2.1.0
     # via
     #   -r requirements/test.txt
     #   xblock
-webencodings==0.5.1
-    # via bleach
 webob==1.8.7
     # via
     #   -r requirements/test.txt
