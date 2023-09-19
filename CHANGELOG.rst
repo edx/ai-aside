@@ -14,6 +14,8 @@ Change Log
 Unreleased
 **********
 
+* Add make install-local target for easy devstack installation
+
 3.5.0 – 2023-09-04
 **********************************************
 
