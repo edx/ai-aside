@@ -10,6 +10,7 @@ from webob import Response
 from xblock.core import XBlock, XBlockAside
 
 from ai_aside.config_api.api import is_summary_enabled
+from ai_aside.constants import ATTR_KEY_USER_ROLE, ATTR_KEY_USER_ID
 from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summaries_configuration_enabled as ff_is_summary_config_enabled
@@ -33,6 +34,7 @@ summary_fragment = """
       data-content-id="{{data_content_id}}"
       data-handler-url="{{data_handler_url}}"
       data-last-updated="{{data_last_updated}}"
+      data-user-role="{{data_user_role}}"
     >
     </div>
   </div>
@@ -133,7 +135,7 @@ def _check_summarizable(block):
     return False
 
 
-def _render_hook_fragment(handler_url, block, summary_items):
+def _render_hook_fragment(self, handler_url, block, summary_items):
     """
     Create hook Fragment from block and summarized children.
 
@@ -142,6 +144,19 @@ def _render_hook_fragment(handler_url, block, summary_items):
     """
     last_published = getattr(block, 'published_on', None)
     last_edited = getattr(block, 'edited_on', None)
+    usage_id = block.scope_ids.usage_id
+
+    if self.runtime.service(self, 'user').get_current_user().opt_attrs.get(ATTR_KEY_USER_ROLE):
+        user = self.runtime.service(self, 'user').get_current_user()
+        user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
+        user_enrollment = self.runtime.service(self, 'credit').get_credit_state(
+            user.opt_attrs.get(ATTR_KEY_USER_ID),
+            usage_id.course_key)
+        if user_enrollment.get('enrollment_mode'):
+            user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+    else:
+        user_role = 'NONE'
+
     for item in summary_items:
         published = item['published_on']
         edited = item['edited_on']
@@ -155,7 +170,7 @@ def _render_hook_fragment(handler_url, block, summary_items):
     if last_edited > last_published:
         last_updated = last_edited
 
-    usage_id = block.scope_ids.usage_id
+
 
     fragment = Fragment('')
     fragment.add_content(
@@ -166,13 +181,15 @@ def _render_hook_fragment(handler_url, block, summary_items):
                 'data_content_id': usage_id,
                 'data_handler_url': handler_url,
                 'data_last_updated': _format_date(last_updated),
+                'data_user_role': user_role,
                 'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
             }
         )
     )
     return fragment
 
-
+@XBlock.needs('user')
+@XBlock.needs('credit')
 class SummaryHookAside(XBlockAside):
     """
     XBlock aside that injects AI summary javascript.
@@ -254,7 +271,7 @@ class SummaryHookAside(XBlockAside):
         usage_id = block.scope_ids.usage_id
         log.info(f'Summary hook injecting into {usage_id}')
 
-        return _render_hook_fragment(self._summary_handler_url(), block, items)
+        return _render_hook_fragment(self, self._summary_handler_url(), block, items)
 
     def _summary_handler_url(self):
         """

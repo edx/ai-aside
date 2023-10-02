@@ -14,6 +14,7 @@ from ai_aside.block import (
     _parse_children_contents,
     _render_hook_fragment,
 )
+from xblock.core import XBlock, XBlockAside
 
 fake_transcript = 'This is the text version from the transcript'
 date1 = datetime(2023, 1, 2, 3, 4, 5)
@@ -43,7 +44,6 @@ class FakeChild:
 
         return None
 
-
 class FakeBlock:
     "Fake block for testing, returns given children"
     def __init__(self, children):
@@ -52,6 +52,9 @@ class FakeBlock:
         self.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
         self.edited_on = date1
         self.published_on = date1
+        my_runtime = MagicMock()
+        my_runtime.service.return_value.get_current_user.return_value.opt_attrs.get.return_value = "student audit"
+        self.runtime = my_runtime
 
     def get_children(self):
         return self.children
@@ -303,6 +306,7 @@ class TestSummaryHookAside(TestCase):
                 data-content-id="block-v1:edX+A+B+type@vertical+block@verticalD"
                 data-handler-url="http://handler.url"
                 data-last-updated="2023-06-07T08:09:10"
+                data-user-role="student audit"
                 >
                 </div>
             </div>
@@ -310,7 +314,8 @@ class TestSummaryHookAside(TestCase):
             <script type="text/javascript" src="http://hookhost/jspath" defer="defer"></script>
         </div>
         '''
-        fragment = _render_hook_fragment('http://handler.url', block, items)
+        fragment = _render_hook_fragment(self, 'http://handler.url', block, items)
+        print(dir(fragment))
         self.assertEqual(
             # join and split to ignore whitespace differences
             "".join(fragment.body_html()).split(),
