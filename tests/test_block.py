@@ -306,7 +306,7 @@ class TestSummaryHookAside(TestCase):
                 data-content-id="block-v1:edX+A+B+type@vertical+block@verticalD"
                 data-handler-url="http://handler.url"
                 data-last-updated="2023-06-07T08:09:10"
-                data-user-role="student audit"
+                data-user-role="user role string"
                 >
                 </div>
             </div>
@@ -314,7 +314,9 @@ class TestSummaryHookAside(TestCase):
             <script type="text/javascript" src="http://hookhost/jspath" defer="defer"></script>
         </div>
         '''
-        fragment = _render_hook_fragment(self, 'http://handler.url', block, items)
+        # this is the problem - self here is the test class, so we'll put it back like it was
+        # and now user role string is just an arg so we just demonstrate it goes through
+        fragment = _render_hook_fragment('user role string', 'http://handler.url', block, items)
         print(dir(fragment))
         self.assertEqual(
             # join and split to ignore whitespace differences

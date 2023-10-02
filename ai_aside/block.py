@@ -135,7 +135,10 @@ def _check_summarizable(block):
     return False
 
 
-def _render_hook_fragment(self, handler_url, block, summary_items):
+# because this isn't in a class, "self" is really just an instance of ai-aside
+# so self isn't the right name. We'd prefer not to have to deal with the complexity
+# in this function so we'll push the user role string out like handler url,
+def _render_hook_fragment(user_role_string, handler_url, block, summary_items):
     """
     Create hook Fragment from block and summarized children.
 
@@ -146,10 +149,6 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
     last_edited = getattr(block, 'edited_on', None)
     usage_id = block.scope_ids.usage_id
     course_key = usage_id.course_key
-
-    user_role = _user_role_string(self.runtime.service(self, 'user'),
-                                  self.runtime.service(self, 'credit'),
-                                  course_key)
 
     for item in summary_items:
         published = item['published_on']
@@ -175,25 +174,12 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
                 'data_content_id': usage_id,
                 'data_handler_url': handler_url,
                 'data_last_updated': _format_date(last_updated),
-                'data_user_role': user_role,
+                'data_user_role': user_role_string,
                 'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
             }
         )
     )
     return fragment
-
-
-def _user_role_string(user_service, credit_service, course_key):
-    user_role = 'unknown'
-    user = user_service.get_current_user()
-    if user is not None:
-        user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
-        user_enrollment = credit_service.get_credit_state(
-            user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
-        if user_enrollment.get('enrollment_mode') is not None:
-            user_role = user_role + " " + user_enrollment.get('enrollment_mode')
-    return user_role
-
 
 @XBlock.needs('user')
 @XBlock.needs('credit')
@@ -278,7 +264,8 @@ class SummaryHookAside(XBlockAside):
         usage_id = block.scope_ids.usage_id
         log.info(f'Summary hook injecting into {usage_id}')
 
-        return _render_hook_fragment(self, self._summary_handler_url(), block, items)
+        return _render_hook_fragment(self._user_role_string(),
+                                     self._summary_handler_url(), block, items)
 
     def _summary_handler_url(self):
         """
@@ -297,6 +284,19 @@ class SummaryHookAside(XBlockAside):
         if aispot_lms_name != '':
             handler_url = handler_url.replace('localhost', aispot_lms_name)
         return handler_url
+
+    # this moves inside the class now which will make it a bit annoying to test
+    # more refactoring to come
+    def _user_role_string(self, course_key):
+        user_role = 'unknown'
+        user = self.runtime.service(self, 'user').get_current_user()
+        if user is not None:
+            user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
+            user_enrollment = self.runtime.service(self, 'credit').get_credit_state(
+                user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
+            if user_enrollment.get('enrollment_mode') is not None:
+                user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+        return user_role
 
     @classmethod
     def should_apply_to_block(cls, block):
