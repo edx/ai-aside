@@ -145,17 +145,16 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
     last_published = getattr(block, 'published_on', None)
     last_edited = getattr(block, 'edited_on', None)
     usage_id = block.scope_ids.usage_id
+    course_key = usage_id.course_key
 
-    if self.runtime.service(self, 'user').get_current_user().opt_attrs.get(ATTR_KEY_USER_ROLE):
-        user = self.runtime.service(self, 'user').get_current_user()
+    user_role = 'unknown'
+    user = self.runtime.service(self, 'user').get_current_user()
+    if user is not None:
         user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
         user_enrollment = self.runtime.service(self, 'credit').get_credit_state(
-            user.opt_attrs.get(ATTR_KEY_USER_ID),
-            usage_id.course_key)
-        if user_enrollment.get('enrollment_mode'):
+            user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
+        if user_enrollment.get('enrollment_mode') is not None:
             user_role = user_role + " " + user_enrollment.get('enrollment_mode')
-    else:
-        user_role = 'NONE'
 
     for item in summary_items:
         published = item['published_on']
@@ -177,7 +176,7 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
         _render_summary(
             {
                 'data_url_api': settings.SUMMARY_HOOK_HOST,
-                'data_course_id': usage_id.course_key,
+                'data_course_id': course_key,
                 'data_content_id': usage_id,
                 'data_handler_url': handler_url,
                 'data_last_updated': _format_date(last_updated),
