@@ -147,14 +147,9 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
     usage_id = block.scope_ids.usage_id
     course_key = usage_id.course_key
 
-    user_role = 'unknown'
-    user = self.runtime.service(self, 'user').get_current_user()
-    if user is not None:
-        user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
-        user_enrollment = self.runtime.service(self, 'credit').get_credit_state(
-            user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
-        if user_enrollment.get('enrollment_mode') is not None:
-            user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+    user_role = _user_role_string(self.runtime.service(self, 'user'),
+                                  self.runtime.service(self, 'credit'),
+                                  course_key)
 
     for item in summary_items:
         published = item['published_on']
@@ -186,6 +181,19 @@ def _render_hook_fragment(self, handler_url, block, summary_items):
         )
     )
     return fragment
+
+
+def _user_role_string(user_service, credit_service, course_key):
+    user_role = 'unknown'
+    user = user_service.get_current_user()
+    if user is not None:
+        user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
+        user_enrollment = credit_service.get_credit_state(
+            user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
+        if user_enrollment.get('enrollment_mode') is not None:
+            user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+    return user_role
+
 
 @XBlock.needs('user')
 @XBlock.needs('credit')
