@@ -285,17 +285,29 @@ class SummaryHookAside(XBlockAside):
             handler_url = handler_url.replace('localhost', aispot_lms_name)
         return handler_url
 
-    # this moves inside the class now which will make it a bit annoying to test
-    # more refactoring to come
+    # this function is super challenging to test because it depends on:
+    # runtime services and getting them
+    # the complex structure of the user object
+    # we can't really effectively test any of that for real in ai-aside,
+    # so reorganize a bit to test things we can test
     def _user_role_string(self, course_key):
+        # getting services is absolutely not someting we need to test
+        return self._user_role_string_from_services(self.runtime.service(self, 'user'),
+                                                    self.runtime.service(self, 'credit'),
+                                                    course_key)
+
+    # this could also be just a loose method in the file but since it's attached to the above
+    # so strongly easier to have it here next to its feeder function
+    @classmethod
+    def _user_role_string_from_services(cls, user_service, credit_service, course_key):
         user_role = 'unknown'
-        user = self.runtime.service(self, 'user').get_current_user()
+        user = user_service.get_current_user() # we'll mock this
         if user is not None:
             user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
-            user_enrollment = self.runtime.service(self, 'credit').get_credit_state(
-                user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
-            if user_enrollment.get('enrollment_mode') is not None:
-                user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+            user_enrollment = credit_service.get_credit_state(
+                user.opt_attrs.get(ATTR_KEY_USER_ID), course_key) # and mock this
+            if user_enrollment.get('enrollment_mode') is not None: # and mock this
+                user_role = user_role + ' ' + user_enrollment.get('enrollment_mode')
         return user_role
 
     @classmethod

@@ -2,7 +2,7 @@
 import unittest
 from datetime import datetime
 from textwrap import dedent
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock, call
 
 from django.test import TestCase, override_settings
 from opaque_keys.edx.keys import UsageKey
@@ -12,7 +12,7 @@ from ai_aside.block import (
     _extract_child_contents,
     _format_date,
     _parse_children_contents,
-    _render_hook_fragment,
+    _render_hook_fragment, SummaryHookAside,
 )
 from xblock.core import XBlock, XBlockAside
 
@@ -323,6 +323,46 @@ class TestSummaryHookAside(TestCase):
             "".join(fragment.body_html()).split(),
             "".join(expected).split()
         )
+
+    def test_user_role_from_services(self):
+        # we don't need a MagicMock, that turns out to be a regular Mock that also implements
+        # the magic __doubleunderscore__ python functions that power python internals like string
+        user_service = Mock()
+        credit_service = Mock()
+        user = Mock()
+        enrollment = Mock()
+        user_service.get_current_user.return_value = user
+        # mocking chained calls is a bit annoying https://docs.python.org/3/library/unittest.mock-examples.html#mocking-chained-calls
+        # but it turns out I didn't need it, opt_attrs is not a function it's just an attribute
+        user.opt_attrs.get.return_value = 'the_user_role'
+        credit_service.get_credit_state.return_value = enrollment
+        enrollment.get.return_value = 'the_enrollment_mode'
+
+        # in getting the mocks right I got a lot of errors where it was trying to build the final string
+        # because it was sticking a mock together with a string - to debug those I just had it return the pieces
+        # one by one it told me what mocks they were for example this is the user_service mock being called
+        # <Mock name='mock.get_current_user().opt_attrs.get()' id='4513560848'> != 'user_role enrollment_mode'
+        expected_role = 'the_user_role the_enrollment_mode'
+        returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
+        self.assertEqual(returned_role, expected_role)
+
+        # mostly we don't care about how the calls go but we might want to check that the course_key is actually used
+        self.assertEqual(credit_service.mock_calls,
+                         [call.get_credit_state('the_user_role', 'course_key'),
+                          call.get_credit_state().get('enrollment_mode'),
+                          call.get_credit_state().get('enrollment_mode')])
+        # as you can see the credit state mock seems to know its child mock calls which is a bit annoying
+        # it used user_role as the first arg because of how opt_attrs.get is mocked out, we could make
+        # that act differently for different calls if we cared
+
+        # also we will want to check negative cases like this
+        user_service.get_current_user.return_value = None
+        expected_role = 'unknown'
+        returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
+        self.assertEqual(returned_role, expected_role)
+        # depending on how many cases it might be useful to make separate functions
+        # and a way to bundle mock construction together
+        # rather than modifying them during the test
 
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
