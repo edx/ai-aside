@@ -10,6 +10,7 @@ from webob import Response
 from xblock.core import XBlock, XBlockAside
 
 from ai_aside.config_api.api import is_summary_enabled
+from ai_aside.constants import ATTR_KEY_USER_ID, ATTR_KEY_USER_ROLE
 from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summaries_configuration_enabled as ff_is_summary_config_enabled
@@ -33,6 +34,7 @@ summary_fragment = """
       data-content-id="{{data_content_id}}"
       data-handler-url="{{data_handler_url}}"
       data-last-updated="{{data_last_updated}}"
+      data-user-role="{{data_user_role}}"
     >
     </div>
   </div>
@@ -133,7 +135,7 @@ def _check_summarizable(block):
     return False
 
 
-def _render_hook_fragment(handler_url, block, summary_items):
+def _render_hook_fragment(user_role_string, handler_url, block, summary_items):
     """
     Create hook Fragment from block and summarized children.
 
@@ -142,6 +144,9 @@ def _render_hook_fragment(handler_url, block, summary_items):
     """
     last_published = getattr(block, 'published_on', None)
     last_edited = getattr(block, 'edited_on', None)
+    usage_id = block.scope_ids.usage_id
+    course_key = usage_id.course_key
+
     for item in summary_items:
         published = item['published_on']
         edited = item['edited_on']
@@ -155,17 +160,16 @@ def _render_hook_fragment(handler_url, block, summary_items):
     if last_edited > last_published:
         last_updated = last_edited
 
-    usage_id = block.scope_ids.usage_id
-
     fragment = Fragment('')
     fragment.add_content(
         _render_summary(
             {
                 'data_url_api': settings.SUMMARY_HOOK_HOST,
-                'data_course_id': usage_id.course_key,
+                'data_course_id': course_key,
                 'data_content_id': usage_id,
                 'data_handler_url': handler_url,
                 'data_last_updated': _format_date(last_updated),
+                'data_user_role': user_role_string,
                 'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
             }
         )
@@ -173,6 +177,8 @@ def _render_hook_fragment(handler_url, block, summary_items):
     return fragment
 
 
+@XBlock.needs('user')
+@XBlock.needs('credit')
 class SummaryHookAside(XBlockAside):
     """
     XBlock aside that injects AI summary javascript.
@@ -254,7 +260,11 @@ class SummaryHookAside(XBlockAside):
         usage_id = block.scope_ids.usage_id
         log.info(f'Summary hook injecting into {usage_id}')
 
-        return _render_hook_fragment(self._summary_handler_url(), block, items)
+        return _render_hook_fragment(
+            self._user_role_string(usage_id.course_key),
+            self._summary_handler_url(),
+            block,
+            items)
 
     def _summary_handler_url(self):
         """
@@ -273,6 +283,31 @@ class SummaryHookAside(XBlockAside):
         if aispot_lms_name != '':
             handler_url = handler_url.replace('localhost', aispot_lms_name)
         return handler_url
+
+    def _user_role_string(self, course_key):
+        return self._user_role_string_from_services(
+            self.runtime.service(self, 'user'),
+            self.runtime.service(self, 'credit'),
+            course_key)
+
+    @classmethod
+    def _user_role_string_from_services(cls, user_service, credit_service, course_key):
+        """
+        Determine and construct the user_role string that gets injected into the block.
+        """
+        user_role = 'unknown'
+        user = user_service.get_current_user()
+        if user is not None:
+            user_role = user.opt_attrs.get(ATTR_KEY_USER_ROLE)
+            user_enrollment = credit_service.get_credit_state(
+                user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
+
+            if user_enrollment.get('enrollment_mode'):
+                user_role = user_role + " " + user_enrollment.get('enrollment_mode')
+            else:
+                user_role = 'unknown'
+
+        return user_role
 
     @classmethod
     def should_apply_to_block(cls, block):

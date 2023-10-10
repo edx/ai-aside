@@ -2,12 +2,13 @@
 import unittest
 from datetime import datetime
 from textwrap import dedent
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from django.test import TestCase, override_settings
 from opaque_keys.edx.keys import UsageKey
 
 from ai_aside.block import (
+    SummaryHookAside,
     _check_summarizable,
     _extract_child_contents,
     _format_date,
@@ -52,6 +53,9 @@ class FakeBlock:
         self.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
         self.edited_on = date1
         self.published_on = date1
+        my_runtime = MagicMock()
+        my_runtime.service.return_value.get_current_user.return_value.opt_attrs.get.return_value = "student audit"
+        self.runtime = my_runtime
 
     def get_children(self):
         return self.children
@@ -303,6 +307,7 @@ class TestSummaryHookAside(TestCase):
                 data-content-id="block-v1:edX+A+B+type@vertical+block@verticalD"
                 data-handler-url="http://handler.url"
                 data-last-updated="2023-06-07T08:09:10"
+                data-user-role="user role string"
                 >
                 </div>
             </div>
@@ -310,12 +315,39 @@ class TestSummaryHookAside(TestCase):
             <script type="text/javascript" src="http://hookhost/jspath" defer="defer"></script>
         </div>
         '''
-        fragment = _render_hook_fragment('http://handler.url', block, items)
+        fragment = _render_hook_fragment('user role string', 'http://handler.url', block, items)
         self.assertEqual(
             # join and split to ignore whitespace differences
             "".join(fragment.body_html()).split(),
             "".join(expected).split()
         )
+
+    def test_user_role_from_services(self):
+        user_service = Mock()
+        credit_service = Mock()
+        user = Mock()
+        enrollment = Mock()
+
+        user_service.get_current_user.return_value = user
+        user.opt_attrs.get.return_value = 'the_user_role'
+        credit_service.get_credit_state.return_value = enrollment
+        enrollment.get.return_value = 'the_enrollment_mode'
+
+        expected_role = 'the_user_role the_enrollment_mode'
+        # pylint: disable=protected-access
+        returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
+        self.assertEqual(returned_role, expected_role)
+
+        self.assertEqual(credit_service.mock_calls,
+                         [call.get_credit_state('the_user_role', 'course_key'),
+                          call.get_credit_state().get('enrollment_mode'),
+                          call.get_credit_state().get('enrollment_mode')])
+
+        user_service.get_current_user.return_value = None
+        expected_role = 'unknown'
+        # pylint: disable=protected-access
+        returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
+        self.assertEqual(returned_role, expected_role)
 
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
