@@ -302,10 +302,8 @@ class SummaryHookAside(XBlockAside):
             user_enrollment = credit_service.get_credit_state(
                 user.opt_attrs.get(ATTR_KEY_USER_ID), course_key)
 
-            if user_enrollment.get('enrollment_mode'):
+            if user_enrollment is not None and user_enrollment.get('enrollment_mode') is not None:
                 user_role = user_role + " " + user_enrollment.get('enrollment_mode')
-            else:
-                user_role = 'unknown'
 
         return user_role
 
