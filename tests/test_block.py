@@ -349,6 +349,21 @@ class TestSummaryHookAside(TestCase):
         returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
         self.assertEqual(returned_role, expected_role)
 
+    def test_user_role_with_no_enrollment(self):
+        user_service = Mock()
+        credit_service = Mock()
+        user = Mock()
+        enrollment = None
+
+        user_service.get_current_user.return_value = user
+        credit_service.get_credit_state.return_value = enrollment
+        user.opt_attrs.get.return_value = 'the role'
+
+        expected_role = 'the role'
+        # pylint: disable=protected-access
+        returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
+        self.assertEqual(returned_role, expected_role)
+
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])
 class TestSummaryHookAsideMissingTranscript(TestCase):

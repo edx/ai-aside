@@ -14,6 +14,11 @@ Change Log
 Unreleased
 **********
 
+3.6.1 — 2023-10-10
+**********************************************
+
+* Resolve scenario where a user has no associated enrollment value
+
 3.6.0 – 2023-10-05
 **********************************************
 
