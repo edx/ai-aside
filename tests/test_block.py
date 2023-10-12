@@ -4,6 +4,7 @@ from datetime import datetime
 from textwrap import dedent
 from unittest.mock import MagicMock, Mock, call, patch
 
+import pytz
 from django.test import TestCase, override_settings
 from opaque_keys.edx.keys import UsageKey
 
@@ -17,8 +18,8 @@ from ai_aside.block import (
 )
 
 fake_transcript = 'This is the text version from the transcript'
-date1 = datetime(2023, 1, 2, 3, 4, 5)
-date2 = datetime(2023, 6, 7, 8, 9, 10)
+date1 = datetime(2023, 1, 2, 3, 4, 5, 0, pytz.UTC)
+date2 = datetime(2023, 6, 7, 8, 9, 10, 0, pytz.UTC)
 
 
 def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):  # pylint: disable=unused-argument
@@ -83,7 +84,7 @@ class TestSummaryHookAside(TestCase):
 
     def test_format_date(self):
         formatted_date = _format_date(date1)
-        self.assertEqual(formatted_date, '2023-01-02T03:04:05')
+        self.assertEqual(formatted_date, '2023-01-02T03:04:05+00:00')
 
     def test_format_date_with_invalid_input(self):
         invalid_date = '2023-05-01'
@@ -291,8 +292,14 @@ class TestSummaryHookAside(TestCase):
     def test_render_hook_fragment(self):
         block = FakeBlock([])
         items = [{
+            'published_on': None,
+            'edited_on': None,
+        }, {
             'published_on': date1,
             'edited_on': date1,
+        }, {
+            'published_on': None,
+            'edited_on': None,
         }, {
             'published_on': date2,
             'edited_on': date1,
@@ -306,7 +313,7 @@ class TestSummaryHookAside(TestCase):
                 data-course-id="course-v1:edX+A+B"
                 data-content-id="block-v1:edX+A+B+type@vertical+block@verticalD"
                 data-handler-url="http://handler.url"
-                data-last-updated="2023-06-07T08:09:10"
+                data-last-updated="2023-06-07T08:09:10+00:00"
                 data-user-role="user role string"
                 >
                 </div>
