@@ -1,8 +1,6 @@
 """
 Config API Utilities
 """
-import logging
-
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthentication
 from rest_framework import status
@@ -12,16 +10,14 @@ from rest_framework.views import APIView
 from ai_aside.config_api.exceptions import AiAsideException
 from ai_aside.config_api.permissions import HasStudioWriteAccess
 
-log = logging.getLogger(__name__)
 
-
-def handle_ai_aside_exception(exc, name=None):  # pylint: disable=inconsistent-return-statements
+def handle_ai_aside_exception(exc):
     """
     Converts ai_aside exceptions into restframework responses
     """
     if isinstance(exc, AiAsideException):
-        log.exception(name)
         return APIResponse(http_status=exc.http_status, data={'message': str(exc)})
+    return None
 
 
 class APIResponse(Response):
@@ -46,7 +42,7 @@ class AiAsideAPIView(APIView):
         """
         Converts ai-aside exceptions into standard restframework responses
         """
-        resp = handle_ai_aside_exception(exc, name=self.__class__.__name__)
+        resp = handle_ai_aside_exception(exc)
         if not resp:
             resp = super().handle_exception(exc)
         return resp
