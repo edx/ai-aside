@@ -14,6 +14,12 @@ Change Log
 Unreleased
 **********
 
+3.6.2 — 2023-10-12
+**********************************************
+
+* Handle rare blocks missing dates when calculating last updated
+* Remove log of expected "not here" exception during config
+
 3.6.1 — 2023-10-10
 **********************************************
 

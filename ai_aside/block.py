@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.template import Context, Template
 from web_fragments.fragment import Fragment
@@ -135,6 +136,17 @@ def _check_summarizable(block):
     return False
 
 
+def _latest_block_date(maybe_dates):
+    """
+    Find the latest a set of possibly null dates sourced from blocks.
+    """
+    latest = datetime(2012, 5, 1, 0, 0, 0, 0, pytz.UTC)  # no blocks predate edx
+    for d in maybe_dates:
+        if d is not None and d > latest:
+            latest = d
+    return latest
+
+
 def _render_hook_fragment(user_role_string, handler_url, block, summary_items):
     """
     Create hook Fragment from block and summarized children.
@@ -147,18 +159,15 @@ def _render_hook_fragment(user_role_string, handler_url, block, summary_items):
     usage_id = block.scope_ids.usage_id
     course_key = usage_id.course_key
 
+    all_interesting_dates = [last_published, last_edited]
     for item in summary_items:
         published = item['published_on']
         edited = item['edited_on']
-        if published and published > last_published:
-            last_published = published
-        if edited and edited > last_edited:
-            last_edited = edited
+        all_interesting_dates.append(published)
+        all_interesting_dates.append(edited)
 
     # we only need to know when the last time was that anything happened
-    last_updated = last_published
-    if last_edited > last_published:
-        last_updated = last_edited
+    last_updated = _latest_block_date(all_interesting_dates)
 
     fragment = Fragment('')
     fragment.add_content(
