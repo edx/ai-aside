@@ -86,7 +86,7 @@ edx-django-utils==5.7.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-drf-extensions==8.10.0
+edx-drf-extensions==8.11.1
     # via -r requirements/test.txt
 edx-lint==5.3.4
     # via -r requirements/quality.in
@@ -158,7 +158,7 @@ psutil==5.9.5
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via -r requirements/quality.in
 pycparser==2.21
     # via
