@@ -170,6 +170,7 @@ setup(
         ],
         "xblock_asides.v1": [
             "summaryhook_aside = ai_aside.block:SummaryHookAside",
+            "extractor_aside = ai_aside.extract:ExtractorAside",
         ],
     },
 
