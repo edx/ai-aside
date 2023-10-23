@@ -6,19 +6,20 @@ or want to mess with it during innovation week. If it lives here forever we can 
 it all back together.
 """
 
-
+import logging
 from html.parser import HTMLParser
 from re import sub
 
 from django.conf import settings
+from web_fragments.fragment import Fragment
 from webob import Response
 from xblock.core import XBlock, XBlockAside
 
+log = logging.getLogger(__name__)
 
 def extract_block_content(block):
     """Extract content for a block and all children recursively."""
     content = []
-
     local_content = extract_text_content(block)
     if local_content is not None:
         content.append(local_content)
@@ -131,6 +132,14 @@ class ExtractorAside(XBlockAside):
     """
 
     # has no views, just provides this extraction handler
+
+
+    @XBlockAside.aside_for('student_view')
+    def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
+        # TODO remove me purely for debugging
+        handler_url = self.runtime.handler_url(self, 'extract_handler')
+        fragment = Fragment(handler_url)
+        return fragment
 
     @XBlock.handler
     def extract_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
