@@ -134,13 +134,6 @@ class ExtractorAside(XBlockAside):
     # has no views, just provides this extraction handler
 
 
-    @XBlockAside.aside_for('student_view')
-    def student_view_aside(self, block, context=None):  # pylint: disable=unused-argument
-        # TODO remove me purely for debugging
-        handler_url = self.runtime.handler_url(self, 'extract_handler')
-        fragment = Fragment(handler_url)
-        return fragment
-
     @XBlock.handler
     def extract_handler(self, request=None, suffix=None):  # pylint: disable=unused-argument
         """
