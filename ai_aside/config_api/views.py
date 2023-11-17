@@ -27,13 +27,14 @@ from ai_aside.config_api.api import (
 )
 from ai_aside.config_api.exceptions import AiAsideException, AiAsideNotFoundException
 from ai_aside.config_api.validators import validate_course_key, validate_unit_key
-from ai_aside.config_api.view_utils import AiAsideAPIView, APIResponse
+from ai_aside.config_api.view_utils import AiAsideAPIView, APIResponse, handle_errors
 
 
 class CourseSummaryConfigEnabledAPIView(AiAsideAPIView):
     """
     Simple GET endpoint to expose whether the course may use summary config.
     """
+    @handle_errors
     def get(self, request, course_id=None):
         """Expose whether the course may use summary config"""
         if course_id is None:
@@ -46,6 +47,7 @@ class CourseSummaryConfigEnabledAPIView(AiAsideAPIView):
 
 class CourseEnabledAPIView(AiAsideAPIView):
     """Handlers for course level settings"""
+    @handle_errors
     def get(self, request, course_id=None):
         """Gets the enabled state for a course"""
         if course_id is None:
@@ -55,6 +57,7 @@ class CourseEnabledAPIView(AiAsideAPIView):
         settings = get_course_settings(course_key)
         return APIResponse(success=True, data=settings)
 
+    @handle_errors
     def post(self, request, course_id=None):
         """Update the course and reset if its necessary"""
 
@@ -74,6 +77,7 @@ class CourseEnabledAPIView(AiAsideAPIView):
 
         return APIResponse(success=True)
 
+    @handle_errors
     def delete(self, request, course_id=None):
         """Deletes the settings for a module"""
 
@@ -87,6 +91,7 @@ class CourseEnabledAPIView(AiAsideAPIView):
 
 class UnitEnabledAPIView(AiAsideAPIView):
     """Handlers for module level settings"""
+    @handle_errors
     def get(self, request, course_id=None, unit_id=None):
         """Gets the enabled state for a unit"""
         if course_id is None or unit_id is None:
@@ -97,6 +102,7 @@ class UnitEnabledAPIView(AiAsideAPIView):
         settings = get_unit_settings(course_key, unit_key)
         return APIResponse(success=True, data=settings)
 
+    @handle_errors
     def post(self, request, course_id=None, unit_id=None):
         """Sets the enabled state for a unit"""
 
@@ -111,6 +117,7 @@ class UnitEnabledAPIView(AiAsideAPIView):
 
         return APIResponse(success=True)
 
+    @handle_errors
     def delete(self, request, course_id=None, unit_id=None):
         """Deletes the settings for a unit"""
 
