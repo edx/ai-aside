@@ -11,15 +11,6 @@ from ai_aside.config_api.exceptions import AiAsideException
 from ai_aside.config_api.permissions import HasStudioWriteAccess
 
 
-def handle_ai_aside_exception(exc):
-    """
-    Converts ai_aside exceptions into restframework responses
-    """
-    if isinstance(exc, AiAsideException):
-        return APIResponse(http_status=exc.http_status, data={'message': str(exc)})
-    return None
-
-
 class APIResponse(Response):
     """API Response"""
     def __init__(self, data=None, http_status=None, content_type=None, success=False):
@@ -38,11 +29,19 @@ class AiAsideAPIView(APIView):
     authentication_classes = (JwtAuthentication, SessionAuthentication,)
     permission_classes = (HasStudioWriteAccess,)
 
-    def handle_exception(self, exc):
-        """
-        Converts ai-aside exceptions into standard restframework responses
-        """
-        resp = handle_ai_aside_exception(exc)
-        if not resp:
-            resp = super().handle_exception(exc)
-        return resp
+
+def handle_errors(view_func):
+    """
+    Wrapper which handles our standard exception.
+
+    We cannot do this by overriding handle_exception as you might expect,
+    because the newrelic wrapper sits between the view function and the
+    handle_exception and logs it, which makes our expected exceptions seem
+    harmful. So we'll handle those before newrelic can see them.
+    """
+    def wrapped_viewfunc(self_, request, **kwargs):
+        try:
+            return view_func(self_, request, **kwargs)
+        except AiAsideException as exc:
+            return APIResponse(http_status=exc.http_status, data={'message': str(exc)})
+    return wrapped_viewfunc
