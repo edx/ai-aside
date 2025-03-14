@@ -3,7 +3,7 @@ Tests for the API
 """
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 from ai_aside.config_api.api import (
@@ -33,6 +33,7 @@ unit_keys = [
 ]
 
 
+@override_settings(SUMMARY_ENABLED_BY_DEFAULT=False)
 class TestApiMethods(TestCase):
     """API Endpoint Method tests"""
     def test_set_course_settings(self):
@@ -291,7 +292,7 @@ class TestApiMethods(TestCase):
         self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
-    def test_is_summary_enabled_disabled_feature_flag(self):
+    def test_is_summary_enabled_disabled_feature_flag_default_false(self):
         course_key_true = course_keys[0]
         course_key_false = course_keys[1]
         course_key_non_existent = course_keys[2]
@@ -312,6 +313,31 @@ class TestApiMethods(TestCase):
         self.assertFalse(is_summary_enabled(course_key_true, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
+
+    @override_settings(SUMMARY_ENABLED_BY_DEFAULT=True)
+    @patch('ai_aside.config_api.api.summaries_configuration_enabled')
+    def test_is_summary_enabled_disabled_feature_flag_default_true(self, mock_enabled):
+        mock_enabled.return_value = True
+        course_key_true = course_keys[0]
+        course_key_false = course_keys[1]
+        course_key_non_existent = course_keys[2]
+        unit_key_non_existent = unit_keys[0]
+
+        AIAsideCourseEnabled.objects.create(
+            course_key=course_key_true,
+            enabled=True,
+        )
+        AIAsideCourseEnabled.objects.create(
+            course_key=course_key_false,
+            enabled=False,
+        )
+
+        self.assertTrue(is_summary_enabled(course_key_non_existent))
+        self.assertTrue(is_summary_enabled(course_key_true))
+        self.assertFalse(is_summary_enabled(course_key_false))
+        self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
+        self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
+        self.assertTrue(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
     def test_reset_course_unit_settings(self):
         course_key = course_keys[0]
