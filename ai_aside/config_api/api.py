@@ -1,6 +1,8 @@
 """
 Implements an API for updating unit and course settings.
 """
+from django.conf import settings as django_settings
+
 from ai_aside.config_api.exceptions import AiAsideNotFoundException
 from ai_aside.config_api.internal import _get_course, _get_course_units, _get_unit
 from ai_aside.models import AIAsideCourseEnabled, AIAsideUnitEnabled
@@ -142,6 +144,8 @@ def is_summary_enabled(course_key, unit_key=None):
     if not summaries_configuration_enabled(course_key):
         return False
 
+    enabled_by_default = django_settings.SUMMARY_ENABLED_BY_DEFAULT is True
+
     if unit_key is not None:
         try:
             unit = _get_unit(course_key, unit_key)
@@ -154,9 +158,9 @@ def is_summary_enabled(course_key, unit_key=None):
     try:
         course = _get_course(course_key)
     except AiAsideNotFoundException:
-        return False
+        return enabled_by_default
 
     if course is not None:
         return course.enabled
 
-    return False
+    return enabled_by_default
