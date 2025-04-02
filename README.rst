@@ -153,7 +153,9 @@ Every time you develop something in this repo
 Deploying
 =========
 
-This plugin is deployed on edx.org via EDXAPP_EXTRA_REQUIREMENTS.
+This plugin is deployed on edx.org following `How to add private requirements to edx-platform`_.
+
+.. _How to add private requirements to edx-platform: https://2u-internal.atlassian.net/wiki/spaces/AT/pages/396034066/How+to+add+private+requirements+to+edx-platform
 
 License
 *******
