@@ -7,11 +7,10 @@ Instead, the CourseApp abstract methods are implemented here and
 imported into and used by the AiAsideCourseApp. This way, these implementations can be tested.
 """
 
-from ai_aside.config_api.api import (
-    is_summary_enabled,
-    set_course_settings,
-)
 from lms.djangoapps.courseware.access import get_user_role
+
+from ai_aside.config_api.api import is_summary_enabled, set_course_settings
+
 
 def is_available(course_key):
     """

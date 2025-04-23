@@ -20,7 +20,7 @@ def cleanup_text(text):
     return stripped
 
 
-class _HTMLToTextHelper(HTMLParser):  # lint-amnesty, pylint: disable=abstract-method
+class _HTMLToTextHelper(HTMLParser):
     """
     Helper function for html_to_text below.
     """

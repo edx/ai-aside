@@ -22,7 +22,7 @@ class AiAsideCourseApp(CourseApp):
     }
 
     @classmethod
-    def is_available(cls, course_key):  # pylint: disable=unused-argument
+    def is_available(cls, course_key):
         """
         Return a boolean indicating this course app's availability for a given course.
 
