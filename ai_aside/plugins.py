@@ -1,6 +1,8 @@
 """
 Plugins for the AI Aside application.
 """
+
+# pylint: disable=import-error
 from openedx.core.djangoapps.course_apps.plugins import CourseApp
 
 from ai_aside import plugins_api
