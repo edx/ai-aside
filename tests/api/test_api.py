@@ -274,30 +274,31 @@ class TestApiMethods(TestCase):
     # As of this writing, SUMMARY_ENABLED_BY_DEFAULT will be set to True,
     # Meaning this tests is covered by test_is_summary_enabled_disabled_feature_flag_default_true
     # This test should be uncommented if this setting is ever set back to False.
-    # @patch('ai_aside.config_api.api.summaries_configuration_enabled')
-    # def test_is_summary_enabled_fallback(self, mock_enabled):
-    #     mock_enabled.return_value = True
-    #     course_key_true = course_keys[0]
-    #     course_key_false = course_keys[1]
-    #     course_key_non_existent = course_keys[2]
-    #     unit_key_non_existent = unit_keys[0]
 
-    #     AIAsideCourseEnabled.objects.create(
-    #         course_key=course_key_true,
-    #         enabled=True,
-    #     )
-    #     AIAsideCourseEnabled.objects.create(
-    #         course_key=course_key_false,
-    #         enabled=False,
-    #     )
+    # @override_settings(SUMMARY_ENABLED_BY_DEFAULT=False)
+    @patch('ai_aside.config_api.api.summaries_configuration_enabled')
+    def test_is_summary_enabled_fallback(self, mock_enabled):
+        mock_enabled.return_value = True
+        course_key_true = course_keys[0]
+        course_key_false = course_keys[1]
+        course_key_non_existent = course_keys[2]
+        unit_key_non_existent = unit_keys[0]
 
-    #     self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
-    #     self.assertTrue(is_summary_enabled(course_key_false, unit_key_non_existent))
-    #     self.assertTrue(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
+        AIAsideCourseEnabled.objects.create(
+            course_key=course_key_true,
+            enabled=True,
+        )
+        AIAsideCourseEnabled.objects.create(
+            course_key=course_key_false,
+            enabled=False,
+        )
+
+        self.assertFalse(is_summary_enabled(course_key_true, unit_key_non_existent))
+        self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
+        self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
     # As of this writing, SUMMARY_ENABLED_BY_DEFAULT will be set to True,
     # but we will keep this test in case we ever set it back to False.
-
     def test_is_summary_enabled_disabled_feature_flag_default_false(self):
         course_key_true = course_keys[0]
         course_key_false = course_keys[1]

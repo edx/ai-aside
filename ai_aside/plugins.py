@@ -1,5 +1,5 @@
 """
-Plugins for the AI Aside application.
+Plugins for the Xpert Unit Summary application.
 """
 
 # pylint: disable=import-error
@@ -10,21 +10,21 @@ from ai_aside import plugins_api
 
 class AiAsideCourseApp(CourseApp):
     """
-    A CourseApp plugin representing the AI Aside feature.
+    A CourseApp plugin representing the Xpert Unit Summary feature.
 
     Please see the associated ADR for more details.
     """
 
-    app_id = 'ai_aside'
-    name = 'AI Aside'
-    description = 'Use generative AI to power a AI Aside using course content.'
+    app_id = 'xpert_unit_summary'
+    name = 'Xpert Unit Summary'
+    description = 'Use generative AI to power a Xpert Unit Summary using course content.'
     documentation_links = {
         'learn_more_openai': 'https://openai.com/',
         'learn_more_openai_data_privacy': 'https://openai.com/api-data-privacy',
     }
 
     @classmethod
-    def is_available(cls, course_key):
+    def is_available(cls, course_key):  # pylint: disable=unused-argument
         """
         Return a boolean indicating this course app's availability for a given course.
 
@@ -37,7 +37,7 @@ class AiAsideCourseApp(CourseApp):
         Returns:
             bool: Availability status of app.
         """
-        return plugins_api.is_available(course_key)
+        return plugins_api.is_available()
 
     @classmethod
     def is_enabled(cls, course_key):

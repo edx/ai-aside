@@ -172,7 +172,7 @@ setup(
             "summaryhook_aside = ai_aside.block:SummaryHookAside",
         ],
         'openedx.course_app': [
-            "ai_aside = ai_aside.plugins:AiAsideCourseApp",
+            "xpert_unit_summary = ai_aside.plugins:AiAsideCourseApp",
         ]
     },
 

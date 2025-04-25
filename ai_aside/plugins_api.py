@@ -9,11 +9,23 @@ imported into and used by the AiAsideCourseApp. This way, these implementations 
 
 # pylint: disable=import-error
 from lms.djangoapps.courseware.access import get_user_role
+from django.conf import settings as platform_settings
 
-from ai_aside.config_api.api import is_summary_enabled, set_course_settings
+from ai_aside.config_api.api import is_summary_config_enabled, set_course_settings
 
 
-def is_available(course_key):
+def is_available():
+    """
+    Return if the Xpert Unit Summaries service is available for use in the first place.
+
+    Returns:
+        bool: Availability status of Xpert Unit Summaries.
+    """
+    return getattr(platform_settings, 'SUMMARY_ENABLED_BY_DEFAULT', False)
+
+
+
+def is_enabled(course_key):
     """
     Return a boolean indicating if this course app is enabled for a given course.
 
@@ -25,23 +37,9 @@ def is_available(course_key):
         course_key (CourseKey): Course key for course whose unit summary enablement is being checked.
 
     Returns:
-        bool: Availability status of app.
-    """
-    return is_summary_enabled(course_key)
-
-
-def is_enabled(course_key):
-    """
-    Return if this course app is enabled for the provided course.
-
-    Args:
-        course_key (CourseKey): The course key for the course you
-            want to check the status of.
-
-    Returns:
         bool: The status of the course app for the specified course.
     """
-    return is_summary_enabled(course_key)
+    return is_summary_config_enabled(course_key)
 
 
 # pylint: disable=unused-argument
