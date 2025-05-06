@@ -7,21 +7,20 @@ Instead, the CourseApp abstract methods are implemented here and
 imported into and used by the AiAsideCourseApp. This way, these implementations can be tested.
 """
 
-from django.conf import settings as platform_settings
 # pylint: disable=import-error
 from lms.djangoapps.courseware.access import get_user_role
 
-from ai_aside.config_api.api import is_summary_config_enabled, set_course_settings
+from ai_aside.config_api.api import is_summary_config_enabled, is_summary_enabled, set_course_settings
 
 
-def is_available():
+def is_available(course_key):
     """
     Return if the Xpert Unit Summaries service is available for use in the first place.
 
     Returns:
         bool: Availability status of Xpert Unit Summaries.
     """
-    return getattr(platform_settings, 'SUMMARY_ENABLED_BY_DEFAULT', False)
+    return is_summary_config_enabled(course_key)
 
 
 def is_enabled(course_key):
@@ -38,7 +37,7 @@ def is_enabled(course_key):
     Returns:
         bool: The status of the course app for the specified course.
     """
-    return is_summary_config_enabled(course_key)
+    return is_summary_enabled(course_key)
 
 
 # pylint: disable=unused-argument

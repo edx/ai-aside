@@ -144,8 +144,6 @@ def is_summary_enabled(course_key, unit_key=None):
     if not summaries_configuration_enabled(course_key):
         return False
 
-    # As of this writing, SUMMARY_ENABLED_BY_DEFAULT will be set to true,
-    # making unit summaries opt-out by default.
     enabled_by_default = django_settings.SUMMARY_ENABLED_BY_DEFAULT is True
 
     if unit_key is not None:

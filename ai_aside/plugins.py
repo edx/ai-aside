@@ -29,7 +29,7 @@ class AiAsideCourseApp(CourseApp):
         Returns:
             bool: Availability status of app.
         """
-        return plugins_api.is_available()
+        return plugins_api.is_available(course_key)
 
     @classmethod
     def is_enabled(cls, course_key):
