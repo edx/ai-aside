@@ -271,6 +271,7 @@ class TestApiMethods(TestCase):
         unit_key_non_existent = unit_keys[2]
         self.assertFalse(is_summary_enabled(course_key, unit_key_non_existent))
 
+    # @override_settings(SUMMARY_ENABLED_BY_DEFAULT=False)
     @patch('ai_aside.config_api.api.summaries_configuration_enabled')
     def test_is_summary_enabled_fallback(self, mock_enabled):
         mock_enabled.return_value = True
@@ -288,7 +289,7 @@ class TestApiMethods(TestCase):
             enabled=False,
         )
 
-        self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
+        self.assertFalse(is_summary_enabled(course_key_true, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
@@ -336,7 +337,7 @@ class TestApiMethods(TestCase):
         self.assertTrue(is_summary_enabled(course_key_true))
         self.assertFalse(is_summary_enabled(course_key_false))
         self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
-        self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
+        self.assertTrue(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertTrue(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
     def test_reset_course_unit_settings(self):

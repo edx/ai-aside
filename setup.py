@@ -171,6 +171,9 @@ setup(
         "xblock_asides.v1": [
             "summaryhook_aside = ai_aside.block:SummaryHookAside",
         ],
+        'openedx.course_app': [
+            "xpert_unit_summary = ai_aside.plugins:AiAsideCourseApp",
+        ]
     },
 
 )

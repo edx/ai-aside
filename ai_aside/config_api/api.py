@@ -40,7 +40,7 @@ def set_course_settings(course_key, settings):
 
     update = {'enabled': enabled}
 
-    AIAsideCourseEnabled.objects.update_or_create(
+    return AIAsideCourseEnabled.objects.update_or_create(
         course_key=course_key,
         defaults=update,
     )
@@ -153,7 +153,7 @@ def is_summary_enabled(course_key, unit_key=None):
             if unit is not None:
                 return unit.enabled
         except AiAsideNotFoundException:
-            pass
+            return enabled_by_default
 
     try:
         course = _get_course(course_key)
