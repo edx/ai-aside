@@ -14,6 +14,18 @@ Change Log
 Unreleased
 **********
 
+3.8.0 - 2025-05-07
+**********************************************
+* Added setting to control whether the summary should be enabled by default
+* Bumped actions/setup-python from 4 to 5
+* Added setting to set the default enabled state for course summaries
+* Updated readme deployment section
+* Added course_app/plugin for unit summaries
+
+3.7.0 — 2023-11-20
+**********************************************
+* Moved standard error handling to where it will not bother newrelic
+
 3.6.2 — 2023-10-12
 **********************************************
 
