@@ -14,6 +14,10 @@ Change Log
 Unreleased
 **********
 
+3.8.1 - 2025-05-13
+**********************************************
+* Bumped ubuntu version to latest for the PyPi publishing job
+
 3.8.0 - 2025-05-07
 **********************************************
 * Added setting to control whether the summary should be enabled by default
