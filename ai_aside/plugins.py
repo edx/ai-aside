@@ -15,6 +15,14 @@ class AiAsideCourseApp(CourseApp):
     Please see the associated ADR for more details.
     """
 
+    app_id = 'xpert-unit-summary'
+    name = 'Xpert unit summaries'
+    description = 'Use generative AI to summarize course content and reinforce learning.'
+    documentation_links = {
+        'learn_more_openai': 'https://openai.com/',
+        'learn_more_openai_data_privacy': 'https://openai.com/api-data-privacy',
+    }
+
     @classmethod
     def is_available(cls, course_key):  # pylint: disable=unused-argument
         """

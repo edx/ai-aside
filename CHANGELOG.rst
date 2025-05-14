@@ -14,6 +14,10 @@ Change Log
 Unreleased
 **********
 
+3.8.2 - 2025-05-14
+**********************************************
+* Fixed bug where necessary class variables were not set on the AiAsideCourseApp class
+
 3.8.1 - 2025-05-13
 **********************************************
 * Bumped ubuntu version to latest for the PyPi publishing job
