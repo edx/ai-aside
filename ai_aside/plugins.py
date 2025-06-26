@@ -15,7 +15,7 @@ class AiAsideCourseApp(CourseApp):
     Please see the associated ADR for more details.
     """
 
-    app_id = 'xpert-unit-summary'
+    app_id = 'xpert_unit_summary'
     name = 'Xpert unit summaries'
     description = 'Use generative AI to summarize course content and reinforce learning.'
     documentation_links = {
