@@ -14,3 +14,5 @@
 # pip 26.0 breaks pip-tools 7.5.2 due to API changes
 # See: https://github.com/jazzband/pip-tools/issues/2185
 pip<26.0
+
+pip-tools<7.6.0
