@@ -10,8 +10,3 @@
 
 # Common constraints for edx repos
 -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-
-# pip 25.3+ breaks pip-tools 7.5.2 due to API changes
-pip<25.3
-
-pip-tools<7.6.0
