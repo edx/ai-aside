@@ -15,7 +15,9 @@ jobs:
       - name: Install pip
         run: pip install -r requirements/pip.txt
       - name: Build package
-        run: python setup.py sdist bdist_wheel
+        run: |
+          pip install build
+          python -m build
       - name: Test publish
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -23,4 +25,5 @@ jobs:
           password: ${{ secrets.PYPI_TEST_UPLOAD_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
           skip_existing: true
+          verbose: true
 

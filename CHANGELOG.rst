@@ -14,6 +14,10 @@ Change Log
 Unreleased
 **********
 
+3.8.3 - 2026-02-06
+**********************************************
+* Updated build process to use python -m build instead of setup.py
+
 3.8.2 - 2025-05-14
 **********************************************
 * Fixed bug where necessary class variables were not set on the AiAsideCourseApp class
