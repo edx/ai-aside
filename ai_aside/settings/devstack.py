@@ -11,6 +11,7 @@ def plugin_settings(settings):
     settings.SUMMARY_HOOK_MIN_SIZE = 500
     settings.SUMMARY_ENABLED_BY_DEFAULT = False
     settings.AISPOT_LMS_NAME = 'lms'  # in docker ai-spot sees the LMS as 'lms' not 'localhost'
+    settings.SUMMARY_CLIENT_ID = 'edx-unit-summaries'
     if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
         from .private import plugin_settings_override  # pylint: disable=import-outside-toplevel,import-error
         plugin_settings_override(settings)

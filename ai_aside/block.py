@@ -36,6 +36,7 @@ summary_fragment = """
       data-handler-url="{{data_handler_url}}"
       data-last-updated="{{data_last_updated}}"
       data-user-role="{{data_user_role}}"
+      data-client-id="{{data_client_id}}"
     >
     </div>
   </div>
@@ -179,6 +180,7 @@ def _render_hook_fragment(user_role_string, handler_url, block, summary_items):
                 'data_handler_url': handler_url,
                 'data_last_updated': _format_date(last_updated),
                 'data_user_role': user_role_string,
+                'data_client_id': getattr(settings, 'SUMMARY_CLIENT_ID', 'edx-unit-summaries'),
                 'js_url': settings.SUMMARY_HOOK_HOST + settings.SUMMARY_HOOK_JS_PATH,
             }
         )
