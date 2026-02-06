@@ -315,6 +315,7 @@ class TestSummaryHookAside(TestCase):
                 data-handler-url="http://handler.url"
                 data-last-updated="2023-06-07T08:09:10+00:00"
                 data-user-role="user role string"
+                data-client-id="edx-unit-summaries"
                 >
                 </div>
             </div>
