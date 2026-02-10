@@ -14,12 +14,9 @@ Change Log
 Unreleased
 **********
 
-3.8.4 - 2026-02-06
+3.8.5 - 2026-02-10
 **********************************************
 * Added client ID support for unit summary feature
-
-3.8.3 - 2026-02-06
-**********************************************
 * Updated build process to use python -m build instead of setup.py
 
 3.8.2 - 2025-05-14
