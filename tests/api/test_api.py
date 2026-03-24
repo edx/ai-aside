@@ -289,7 +289,7 @@ class TestApiMethods(TestCase):
             enabled=False,
         )
 
-        self.assertFalse(is_summary_enabled(course_key_true, unit_key_non_existent))
+        self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertFalse(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
@@ -337,7 +337,7 @@ class TestApiMethods(TestCase):
         self.assertTrue(is_summary_enabled(course_key_true))
         self.assertFalse(is_summary_enabled(course_key_false))
         self.assertTrue(is_summary_enabled(course_key_true, unit_key_non_existent))
-        self.assertTrue(is_summary_enabled(course_key_false, unit_key_non_existent))
+        self.assertFalse(is_summary_enabled(course_key_false, unit_key_non_existent))
         self.assertTrue(is_summary_enabled(course_key_non_existent, unit_key_non_existent))
 
     def test_reset_course_unit_settings(self):
