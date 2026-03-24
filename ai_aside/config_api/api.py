@@ -146,21 +146,23 @@ def is_summary_enabled(course_key, unit_key=None):
 
     enabled_by_default = django_settings.SUMMARY_ENABLED_BY_DEFAULT is True
 
+    # Check unit-level override if unit_key provided
     if unit_key is not None:
         try:
             unit = _get_unit(course_key, unit_key)
-
             if unit is not None:
                 return unit.enabled
         except AiAsideNotFoundException:
-            return enabled_by_default
+            # No unit-level setting, fall through to check course-level
+            pass
 
+    # Check course-level setting
     try:
         course = _get_course(course_key)
+        if course is not None:
+            return course.enabled
     except AiAsideNotFoundException:
-        return enabled_by_default
-
-    if course is not None:
-        return course.enabled
+        # No course-level setting, use default
+        pass
 
     return enabled_by_default

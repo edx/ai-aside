@@ -2,6 +2,6 @@
 A plugin containing xblocks and apps supporting GPT and other LLM use on edX.
 """
 
-__version__ = '3.8.5'
+__version__ = '3.8.6'
 
 default_app_config = "ai_aside.apps.AiAsideConfig"

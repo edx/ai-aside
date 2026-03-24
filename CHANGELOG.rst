@@ -14,6 +14,11 @@ Change Log
 Unreleased
 **********
 
+3.8.6 - 2026-03-24
+**********************************************
+* Fixed is_summary_enabled() to properly check course-level settings when no unit record exists
+* This ensures course-level toggle correctly controls summary button visibility
+
 3.8.5 - 2026-02-10
 **********************************************
 * Added client ID support for unit summary feature
