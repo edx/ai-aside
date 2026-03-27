@@ -2,4 +2,5 @@
 
 -c constraints.txt
 
+pip                       # Needed to ensure compatible pip version is installed first
 pip-tools                 # Contains pip-compile, used to generate pip requirements files

@@ -188,7 +188,7 @@ pbr==5.11.1
     # via
     #   -r requirements/quality.txt
     #   stevedore
-pip-tools==7.3.0
+pip-tools==7.5.2
     # via -r requirements/pip-tools.txt
 platformdirs==3.11.0
     # via
