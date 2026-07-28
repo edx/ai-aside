@@ -26,8 +26,22 @@ CATEGORY_TYPE_MAP = {
 }
 
 summary_fragment = """
-<div>&nbsp;</div>
 <div class="summary-hook">
+  <style>
+    .summary-hook #ai-spot-root {
+      margin-bottom: 2rem;
+    }
+    .summary-hook #ai-spot__launch-container > div > button.no-bg {
+      outline: 1px solid #d9d9dc;
+      border: 1px solid #d9d9dc;
+      border-radius: 6px;
+      background: #f7f7f8;
+    }
+    .summary-hook #ai-spot__summarization--container-box {
+      background: #f7f7f8;
+      border: 1px solid #d9d9dc;
+    }
+  </style>
   <div summary-launch>
     <div id="launch-summary-button"
       data-url-api="{{data_url_api}}"
