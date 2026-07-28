@@ -14,6 +14,12 @@ Change Log
 Unreleased
 **********
 
+3.8.7 - 2026-07-28
+**********************************************
+* Gave the Xpert Unit Summary button and panel a light note-box look, scoped to
+  the ai-aside rendering (kept out of ai-spot since it's also embedded by
+  non-edX consumers)
+
 3.8.6 - 2026-03-24
 **********************************************
 * Fixed is_summary_enabled() to properly check course-level settings when no unit record exists
