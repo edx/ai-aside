@@ -14,6 +14,10 @@ Change Log
 Unreleased
 **********
 
+3.8.8 - 2026-08-05
+**********************************************
+* Added Django 5.2 tox/CI compatibility and Python 3.11 test matrix updates.
+
 3.8.7 - 2026-07-28
 **********************************************
 * Gave the Xpert Unit Summary button and panel a light note-box look, scoped to
