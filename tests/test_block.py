@@ -17,6 +17,8 @@ from ai_aside.block import (
     _render_hook_fragment,
 )
 
+long_html = '<p>' + ('x' * 60) + '</p>'
+
 fake_transcript = 'This is the text version from the transcript'
 date1 = datetime(2023, 1, 2, 3, 4, 5, 0, pytz.UTC)
 date2 = datetime(2023, 6, 7, 8, 9, 10, 0, pytz.UTC)
@@ -24,6 +26,16 @@ date2 = datetime(2023, 6, 7, 8, 9, 10, 0, pytz.UTC)
 
 def fake_get_transcript(child, lang=None, output_format='SRT', youtube_id=None):  # pylint: disable=unused-argument
     return (fake_transcript, 'unused', 'unused')
+
+
+class FakeAsideUsageId:
+    """Fake aside usage id (usage_key + course_key), enough for get_block() and monitoring tags."""
+    def __init__(self, usage_key):
+        self.usage_key = usage_key
+        self.course_key = usage_key.course_key
+
+    def __str__(self):
+        return str(self.usage_key)
 
 
 class FakeChild:
@@ -50,6 +62,7 @@ class FakeBlock:
     "Fake block for testing, returns given children"
     def __init__(self, children):
         self.children = children
+        self.category = 'vertical'
         self.scope_ids = lambda: None
         self.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
         self.edited_on = date1
@@ -385,6 +398,165 @@ class TestSummaryHookAside(TestCase):
         # pylint: disable=protected-access
         returned_role = SummaryHookAside._user_role_string_from_services(user_service, credit_service, "course_key")
         self.assertEqual(returned_role, expected_role)
+
+    @override_settings(AISPOT_LMS_NAME='')
+    @patch.object(SummaryHookAside, '_user_role_string', return_value='student audit')
+    @patch('ai_aside.block.monitor_aside_injection')
+    def test_student_view_aside_monitors_injection(self, mock_monitor, _mock_user_role):
+        children = [FakeChild('html', '01', long_html)]
+        children[0].published_on = None
+        children[0].edited_on = None
+        block = FakeBlock(children)
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock()
+        aside.runtime.handler_url.return_value = 'http://handler_noauth.url'
+        aside.student_view_aside(block)
+
+        mock_monitor.assert_called_once()
+        usage_id_arg, user_role_arg, duration_ms = mock_monitor.call_args[0]
+        self.assertEqual(usage_id_arg, block.scope_ids.usage_id)
+        self.assertEqual(user_role_arg, 'student audit')
+        self.assertIsInstance(duration_ms, float)
+
+    @override_settings(AISPOT_LMS_NAME='')
+    @patch('ai_aside.block.monitor_aside_injection')
+    def test_student_view_aside_below_min_size_does_not_monitor_injection(self, mock_monitor):
+        block = FakeBlock([FakeChild('html', '01', '<p>too short</p>')])
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock()
+        aside.runtime.handler_url.return_value = 'http://handler_noauth.url'
+        fragment = aside.student_view_aside(block)
+
+        self.assertEqual(fragment.body_html(), '')
+        mock_monitor.assert_not_called()
+
+    @patch('ai_aside.block.monitor_render_failure')
+    @patch('ai_aside.block.monitor_extraction_error')
+    def test_student_view_aside_suppresses_and_monitors_exception(self, mock_extraction_error, mock_render_failure):
+        block = FakeBlock([])
+        block.get_children = Mock(side_effect=RuntimeError('kaboom'))
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        fragment = aside.student_view_aside(block)
+
+        self.assertEqual(fragment.body_html(), '')
+        mock_extraction_error.assert_called_once()
+        (usage_id_arg, exception), kwargs = mock_extraction_error.call_args
+        self.assertEqual(usage_id_arg, block.scope_ids.usage_id)
+        self.assertIsInstance(exception, RuntimeError)
+        self.assertEqual(kwargs.get('source'), 'aside')
+        mock_render_failure.assert_called_once_with(block.scope_ids.usage_id, exception)
+
+    @patch('ai_aside.monitoring.set_custom_attributes_for_course_key', side_effect=RuntimeError('monitoring down'))
+    def test_student_view_aside_monitoring_failure_does_not_break_suppression(self, _mock_tag_usage):
+        block = FakeBlock([])
+        block.get_children = Mock(side_effect=ValueError('render broke'))
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        fragment = aside.student_view_aside(block)
+
+        self.assertEqual(fragment.body_html(), '')
+
+    @patch('ai_aside.block.monitor_should_apply_failure')
+    @patch('ai_aside.block.is_summary_enabled')
+    @patch('ai_aside.block.ff_is_summary_config_enabled')
+    def test_should_apply_to_block_suppresses_and_monitors_exception(
+        self, mock_ff_config_enabled, mock_is_summary_enabled, mock_monitor
+    ):
+        mock_ff_config_enabled.return_value = True
+        mock_is_summary_enabled.side_effect = ValueError('boom')
+
+        block = FakeBlock([])
+        block.runtime.user_is_staff = False
+
+        result = SummaryHookAside.should_apply_to_block(block)
+
+        self.assertFalse(result)
+        self.assertEqual(mock_monitor.call_count, 1)
+        (usage_id, exception), _ = mock_monitor.call_args
+        self.assertEqual(usage_id, block.scope_ids.usage_id)
+        self.assertIsInstance(exception, ValueError)
+
+    @patch('ai_aside.block.monitor_handler_result')
+    def test_summary_handler_forbidden_monitors_result(self, mock_monitor):
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock(user_is_staff=False)
+        aside.scope_ids = Mock()
+        aside.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
+
+        response = aside.summary_handler()
+
+        self.assertEqual(response.status_code, 403)
+        mock_monitor.assert_called_once_with(aside.scope_ids.usage_id, 'forbidden')
+
+    @patch('ai_aside.block.monitor_handler_invocation')
+    def test_summary_handler_monitors_invocation_regardless_of_outcome(self, mock_monitor):
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock(user_is_staff=False)
+        aside.scope_ids = Mock()
+        aside.scope_ids.usage_id = UsageKey.from_string('block-v1:edX+A+B+type@vertical+block@verticalD')
+
+        aside.summary_handler()
+
+        mock_monitor.assert_called_once_with(aside.scope_ids.usage_id)
+
+    @patch('ai_aside.block.monitor_extraction_metrics')
+    @patch('ai_aside.block.monitor_handler_result')
+    @patch('ai_aside.block.SummaryHookAside.should_apply_to_block')
+    @patch('ai_aside.block.get_block')
+    def test_summary_handler_success_monitors_extraction_metrics(
+        self, mock_get_block, mock_should_apply, mock_monitor_result, mock_monitor_extraction
+    ):
+        block = FakeBlock([FakeChild('html', test_html=long_html)])
+        mock_get_block.return_value = block
+        mock_should_apply.return_value = True
+        aside_usage_id = FakeAsideUsageId(block.scope_ids.usage_id)
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock(user_is_staff=True)
+        aside.scope_ids = Mock()
+        aside.scope_ids.usage_id = aside_usage_id
+
+        response = aside.summary_handler()
+
+        self.assertEqual(response.status_code, 200)
+        mock_monitor_extraction.assert_called_once()
+        usage_id_arg, duration_ms, content_size, block_count = mock_monitor_extraction.call_args[0]
+        self.assertEqual(usage_id_arg, aside_usage_id)
+        self.assertIsInstance(duration_ms, float)
+        self.assertGreater(content_size, 0)
+        self.assertEqual(block_count, 1)
+        mock_monitor_result.assert_called_once_with(aside_usage_id, 'success')
+
+    @patch('ai_aside.block.monitor_extraction_error')
+    @patch('ai_aside.block.monitor_handler_result')
+    @patch('ai_aside.block.SummaryHookAside.should_apply_to_block')
+    @patch('ai_aside.block.get_block')
+    def test_summary_handler_extraction_error_monitors_and_returns_500(
+        self, mock_get_block, mock_should_apply, mock_monitor_result, mock_monitor_error
+    ):
+        block = FakeBlock([])
+        block.get_children = Mock(side_effect=RuntimeError('kaboom'))
+        mock_get_block.return_value = block
+        mock_should_apply.return_value = True
+        aside_usage_id = FakeAsideUsageId(block.scope_ids.usage_id)
+
+        aside = SummaryHookAside.__new__(SummaryHookAside)
+        aside.runtime = MagicMock(user_is_staff=True)
+        aside.scope_ids = Mock()
+        aside.scope_ids.usage_id = aside_usage_id
+
+        response = aside.summary_handler()
+
+        self.assertEqual(response.status_code, 500)
+        mock_monitor_error.assert_called_once()
+        (usage_id_arg, exception), kwargs = mock_monitor_error.call_args
+        self.assertEqual(usage_id_arg, aside_usage_id)
+        self.assertIsInstance(exception, RuntimeError)
+        self.assertEqual(kwargs.get('source'), 'handler')
+        mock_monitor_result.assert_called_once_with(aside_usage_id, 'error')
 
 
 @override_settings(SUMMARY_HOOK_MIN_SIZE=40, HTML_TAGS_TO_REMOVE=['script', 'style', 'test'])

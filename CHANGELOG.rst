@@ -14,6 +14,21 @@ Change Log
 Unreleased
 **********
 
+3.8.9 - 2026-08-21
+**********************************************
+* Completed DataDog instrumentation for Xpert Summary (LP-919): config API requests
+  (``ai_aside/config_api/views.py``) are now instrumented centrally in
+  ``AiAsideAPIView``, tagged with method/course_id/unit_id/action/status and
+  reporting call counts and latency; ``summary_handler`` now reports invocation
+  counts, content-extraction latency, content size, and block count; and
+  ``student_view_aside`` now reports aside injection counts and render latency
+  tagged with user_role. Added a Datadog querying/alerting reference doc
+  (``docs/how-tos/monitoring.rst``).
+
+* Added DataDog monitoring for Xpert Summary: render failures, should_apply_to_block
+  failures, and summary_handler request outcomes are now reported as custom attributes,
+  counters, and monitored exceptions instead of only being logged.
+
 3.8.8 - 2026-08-05
 **********************************************
 * Added Django 5.2 tox/CI compatibility and Python 3.11 test matrix updates.
