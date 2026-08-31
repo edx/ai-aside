@@ -29,7 +29,7 @@ class TestApiViewsWithPermissions(AIAsideAPITestCase):
     def setUp(self):
         super().setUp()
         can_change_summaries_settings.return_value = True
-        self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
+        self.access_mock = patch('ai_aside.config_api.permissions.can_change_summaries_settings',
                                  can_change_summaries_settings)
         self.access_mock.start()
 
@@ -338,7 +338,7 @@ class TestApiViewsWithoutPermissions(AIAsideAPITestCase):
     def setUp(self):
         super().setUp()
         can_change_summaries_settings.return_value = False
-        self.access_mock = patch('ai_aside.platform_imports.can_change_summaries_settings',
+        self.access_mock = patch('ai_aside.config_api.permissions.can_change_summaries_settings',
                                  can_change_summaries_settings)
         self.access_mock.start()
 

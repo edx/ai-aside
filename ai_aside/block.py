@@ -1,6 +1,7 @@
 """Xblock aside enabling OpenAI driven summaries."""
 
 import logging
+import time
 from datetime import datetime
 
 import pytz
@@ -12,6 +13,15 @@ from xblock.core import XBlock, XBlockAside
 
 from ai_aside.config_api.api import is_summary_enabled
 from ai_aside.constants import ATTR_KEY_USER_ID, ATTR_KEY_USER_ROLE
+from ai_aside.monitoring import (
+    monitor_aside_injection,
+    monitor_extraction_error,
+    monitor_extraction_metrics,
+    monitor_handler_invocation,
+    monitor_handler_result,
+    monitor_render_failure,
+    monitor_should_apply_failure,
+)
 from ai_aside.platform_imports import get_block, get_text_transcript
 from ai_aside.text_utils import html_to_text
 from ai_aside.waffle import summaries_configuration_enabled as ff_is_summary_config_enabled
@@ -217,25 +227,40 @@ class SummaryHookAside(XBlockAside):
         Only services and staff users are allowed to fetch summary text, everyone else
         gets an unhelpful 403.
         """
+        usage_id = self.scope_ids.usage_id
+        monitor_handler_invocation(usage_id)
+
         if not _staff_user(self):
+            monitor_handler_result(usage_id, 'forbidden')
             return Response(status=403)
 
-        block = get_block(self.scope_ids.usage_id.usage_key)
-        valid = self.should_apply_to_block(block)
+        try:
+            block = get_block(self.scope_ids.usage_id.usage_key)
+            valid = self.should_apply_to_block(block)
 
-        if not valid:
-            return Response(status=404)
+            if not valid:
+                monitor_handler_result(usage_id, 'not_found')
+                return Response(status=404)
 
-        published_on = getattr(block, 'published_on', None)
-        edited_on = getattr(block, 'edited_on', None)
+            published_on = getattr(block, 'published_on', None)
+            edited_on = getattr(block, 'edited_on', None)
 
-        data = []
+            extraction_start = time.monotonic()
+            length, items = _parse_children_contents(block)
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            log.exception('Summary handler content retrieval failed on %s', usage_id)
+            monitor_extraction_error(usage_id, ex, source='handler')
+            monitor_handler_result(usage_id, 'error')
+            return Response(status=500)
+        extraction_duration_ms = (time.monotonic() - extraction_start) * 1000
 
-        length, items = _parse_children_contents(block)
+        monitor_extraction_metrics(usage_id, extraction_duration_ms, length, len(items))
 
         if length < settings.SUMMARY_HOOK_MIN_SIZE or len(items) < 1:
+            monitor_handler_result(usage_id, 'empty')
             return Response(json_body={'data': []})
 
+        data = []
         for item in items:
             data.append({
                 **item,
@@ -250,6 +275,7 @@ class SummaryHookAside(XBlockAside):
             'published_on': _format_date(published_on),
             'edited_on': _format_date(edited_on),
         }
+        monitor_handler_result(usage_id, 'success')
         return Response(json_body=json)
 
     @XBlockAside.aside_for('student_view')
@@ -266,7 +292,8 @@ class SummaryHookAside(XBlockAside):
             return self._student_view_can_throw(block)
         except Exception as ex:  # pylint: disable=broad-exception-caught
             usage_id = block.scope_ids.usage_id
-            log.error(f'Summary hook aside suppressed exception on {usage_id} during student_view_aside: {ex}')
+            log.exception('Summary hook aside suppressed exception on %s during student_view_aside', usage_id)
+            monitor_render_failure(usage_id, ex)
             return Fragment('')
 
     def _student_view_can_throw(self, block):
@@ -277,7 +304,13 @@ class SummaryHookAside(XBlockAside):
 
         This function can throw exceptions.
         """
-        length, items = _parse_children_contents(block)
+        render_start = time.monotonic()
+
+        try:
+            length, items = _parse_children_contents(block)
+        except Exception as ex:  # Intentional broad catch: monitor, then re-raise.
+            monitor_extraction_error(block.scope_ids.usage_id, ex, source='aside')
+            raise
 
         if length < settings.SUMMARY_HOOK_MIN_SIZE:
             return Fragment('')
@@ -285,11 +318,15 @@ class SummaryHookAside(XBlockAside):
         usage_id = block.scope_ids.usage_id
         log.info(f'Summary hook injecting into {usage_id}')
 
-        return _render_hook_fragment(
-            self._user_role_string(usage_id.course_key),
+        user_role = self._user_role_string(usage_id.course_key)
+        fragment = _render_hook_fragment(
+            user_role,
             self._summary_handler_url(),
             block,
             items)
+        render_duration_ms = (time.monotonic() - render_start) * 1000
+        monitor_aside_injection(usage_id, user_role, render_duration_ms)
+        return fragment
 
     def _summary_handler_url(self):
         """
@@ -344,7 +381,8 @@ class SummaryHookAside(XBlockAside):
             return cls._should_apply_can_throw(block)
         except Exception as ex:  # pylint: disable=broad-exception-caught
             usage_id = block.scope_ids.usage_id
-            log.error(f'Summary hook aside suppressed exception on {usage_id} during should_apply_to_block: {ex}')
+            log.exception('Summary hook aside suppressed exception on %s during should_apply_to_block', usage_id)
+            monitor_should_apply_failure(usage_id, ex)
             return False
 
     @classmethod
