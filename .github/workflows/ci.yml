@@ -16,7 +16,7 @@ jobs:
         tox-env: [py311-django42, py311-django52, quality]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           architecture: x64
