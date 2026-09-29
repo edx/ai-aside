@@ -69,6 +69,11 @@ extensions = [
     'sphinx.ext.napoleon'
 ]
 
+# openedx and lms are provided by edx-platform at runtime and aren't installable
+# standalone, so autodoc can't import modules (e.g. ai_aside.plugins,
+# ai_aside.plugins_api) that depend on them.
+autodoc_mock_imports = ['openedx', 'lms']
+
 # A list of warning types to suppress arbitrary warning messages.
 suppress_warnings = [
     'image.nonlocal_uri',
@@ -518,7 +523,7 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.8', None),
+    'python': ('https://docs.python.org/3.12', None),
     'django': ('https://docs.djangoproject.com/en/3.2/', 'https://docs.djangoproject.com/en/3.2/_objects/'),
     'model_utils': ('https://django-model-utils.readthedocs.io/en/latest/', None),
 }

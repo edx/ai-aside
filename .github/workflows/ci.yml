@@ -13,12 +13,22 @@ jobs:
       contents: read
     strategy:
       matrix:
-        tox-env: [py311-django42, py311-django52, quality]
+        include:
+          - tox-env: py311-django42
+            python-version: '3.11'
+          - tox-env: py311-django52
+            python-version: '3.11'
+          - tox-env: py312-django42
+            python-version: '3.12'
+          - tox-env: py312-django52
+            python-version: '3.12'
+          - tox-env: quality
+            python-version: '3.12'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
           architecture: x64
       - name: Install requirements
         run: pip install -r requirements/ci.txt
