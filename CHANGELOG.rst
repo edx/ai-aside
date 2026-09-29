@@ -14,7 +14,7 @@ Change Log
 Unreleased
 **********
 
-3.8.10 - 2026-09-28
+3.9.0 - 2026-09-29
 **********************************************
 * Added Python 3.12 support, per the org-wide Python 3.12 upgrade process (libraries keep
   both 3.11 and 3.12): tox/CI now run the full ``py{311,312}-django{42,52}`` matrix, the
