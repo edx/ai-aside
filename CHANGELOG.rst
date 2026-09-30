@@ -21,7 +21,7 @@ Unreleased
   weekly requirements-upgrade workflow now compiles with Python 3.12, and ``setup.py``
   declares ``python_requires = >=3.11`` with 3.11/3.12 classifiers.
 * Regenerated ``requirements/*.txt`` from scratch with Python 3.12 (``make upgrade``).
-  Two pins had to be held back in ``requirements/constraints.txt`` to keep Python 3.11 and
+  Three pins had to be held back in ``requirements/constraints.txt`` to keep Python 3.11 and
   Django 4.2 support: ``code-annotations<3.0.0`` (3.0.0 requires Python >=3.12) and
   ``djangorestframework<3.18.0`` (3.18.0 requires Django >=5.2). XBlock is held to
   ``xblock<6.0.0`` for the same reason (6.0.0 requires Python >=3.12) -- this is the
