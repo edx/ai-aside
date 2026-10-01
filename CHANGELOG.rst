@@ -14,6 +14,34 @@ Change Log
 Unreleased
 **********
 
+3.9.0 - 2026-09-29
+**********************************************
+* Added Python 3.12 support, per the org-wide Python 3.12 upgrade process (libraries keep
+  both 3.11 and 3.12): tox/CI now run the full ``py{311,312}-django{42,52}`` matrix, the
+  weekly requirements-upgrade workflow now compiles with Python 3.12, and ``setup.py``
+  declares ``python_requires = >=3.11`` with 3.11/3.12 classifiers.
+* Regenerated ``requirements/*.txt`` from scratch with Python 3.12 (``make upgrade``).
+  Three pins had to be held back in ``requirements/constraints.txt`` to keep Python 3.11 and
+  Django 4.2 support: ``code-annotations<3.0.0`` (3.0.0 requires Python >=3.12) and
+  ``djangorestframework<3.18.0`` (3.18.0 requires Django >=5.2). XBlock is held to
+  ``xblock<6.0.0`` for the same reason (6.0.0 requires Python >=3.12) -- this is the
+  biggest of the three since XBlock is ai-aside's core runtime dependency, so it's called
+  out separately for visibility.
+* Fixed the ``quality``, ``docs``, and ``pii_check`` tox environments, which were broken
+  independently of the Python version bump: pinned ``setuptools<81`` in each (newer
+  setuptools dropped ``pkg_resources``, needed by ``edx_lint``'s pylint plugin and by
+  XBlock); added a ``basepython`` for each since ``[testenv]``'s ``basepython`` is now
+  Python-version-conditional; recompiled ``requirements/quality.txt`` to resolve an
+  incompatible ``edx-lint``/``astroid`` pin combination; disabled the new pylint
+  ``too-many-positional-arguments`` check alongside the already-disabled
+  ``too-many-arguments``; mocked the edx-platform-only ``openedx``/``lms`` imports for
+  Sphinx autodoc; and added the missing toctree entry for ``docs/how-tos/monitoring.rst``.
+* Dropped the last remaining Python 3.8 references: ``.github/workflows/publish.yml`` and
+  ``test_publish.yml`` now build/publish on Python 3.12 (previously 3.8, which is no longer
+  installable per ``python_requires``) and got their ``actions/checkout`` bumped to v4;
+  updated the stale ``mkvirtualenv -p python3.8`` instruction in ``README.rst`` and the
+  Python intersphinx mapping in ``docs/conf.py`` to point at 3.12.
+
 3.8.9 - 2026-08-21
 **********************************************
 * Completed DataDog instrumentation for Xpert Summary (LP-919): config API requests

@@ -24,7 +24,7 @@ One Time Setup
   cd ai-aside
 
   # Set up a virtualenv using virtualenvwrapper with the same name as the repo and activate it
-  mkvirtualenv -p python3.8 ai-aside
+  mkvirtualenv -p python3.12 ai-aside
 
 Local testing
 ~~~~~~~~~~~~~

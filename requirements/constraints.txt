@@ -10,3 +10,17 @@
 
 # Common constraints for edx repos
 -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+
+# code-annotations 3.0.0 requires Python >=3.12, but this repo's tox matrix still tests
+# Python 3.11. Held back to the last release that supports 3.11 (2026-09-28).
+code-annotations<3.0.0
+
+# djangorestframework 3.18.0 raised its Django floor to >=5.2, but this repo's tox matrix
+# still tests Django 4.2. Held back to the last release compatible with Django 4.2 (2026-09-28).
+djangorestframework<3.18.0
+
+# XBlock 6.0.0 (2026-03-24) requires Python >=3.12 (via a transitive dependency), but this
+# repo's tox matrix still tests Python 3.11. Held back to the last release that installs on
+# 3.11 (2026-09-28). XBlock is ai-aside's core runtime dependency, so this pin is a bigger
+# deal than the others above -- see PR discussion before removing it.
+xblock<6.0.0
